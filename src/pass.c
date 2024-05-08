@@ -37,6 +37,10 @@ int nwipe_random_verify( nwipe_context_t* c )
     /**
      * Verifies that a random pass was correctly written to the device.
      *
+     * returns:
+     *          0   = Success
+     *          -1  = I/O error
+     *          -2  = PRNG error
      */
 
     /* The result holder. */
@@ -59,14 +63,14 @@ int nwipe_random_verify( nwipe_context_t* c )
 
     if( c->prng_seed.s == NULL )
     {
-        nwipe_log( NWIPE_LOG_SANITY, "Null seed pointer." );
-        return -1;
+        nwipe_log( NWIPE_LOG_SANITY, "Null seed pointer on verification." );
+        return -2;
     }
 
     if( c->prng_seed.length <= 0 )
     {
-        nwipe_log( NWIPE_LOG_SANITY, "The entropy length member is %i.", c->prng_seed.length );
-        return -1;
+        nwipe_log( NWIPE_LOG_SANITY, "On verification the entropy length member is %i.", c->prng_seed.length );
+        return -2;
     }
 
     /* Create the input buffer. */
@@ -133,7 +137,11 @@ int nwipe_random_verify( nwipe_context_t* c )
     }
 
     /* Reseed the PRNG. */
-    c->prng->init( &c->prng_state, &c->prng_seed );
+    if( c->prng->init( &c->prng_state, &c->prng_seed ) )
+    {
+        nwipe_log( NWIPE_LOG_ERROR, "Initialising PRNG failed on verification" );
+        return -2;
+    }
 
     while( z > 0 )
     {
@@ -154,7 +162,11 @@ int nwipe_random_verify( nwipe_context_t* c )
         }
 
         /* Fill the output buffer with the random pattern. */
-        c->prng->read( &c->prng_state, d, blocksize );
+        if( c->prng->read( &c->prng_state, d, blocksize ) )
+        {
+            nwipe_log( NWIPE_LOG_ERROR, "Reading PRNG failed on verification" );
+            return -2;
+        }
 
         /* Read the buffer in from the device. */
         r = read( c->device_fd, b, blocksize );
@@ -253,14 +265,14 @@ int nwipe_random_pass( NWIPE_METHOD_SIGNATURE )
 
     if( c->prng_seed.s == NULL )
     {
-        nwipe_log( NWIPE_LOG_SANITY, "__FUNCTION__: Null seed pointer." );
-        return -1;
+        nwipe_log( NWIPE_LOG_SANITY, "__FUNCTION__: Null seed pointer on erasure" );
+        return -2;
     }
 
     if( c->prng_seed.length <= 0 )
     {
-        nwipe_log( NWIPE_LOG_SANITY, "__FUNCTION__: The entropy length member is %i.", c->prng_seed.length );
-        return -1;
+        nwipe_log( NWIPE_LOG_SANITY, "__FUNCTION__: On erasure the entropy length member is %i.", c->prng_seed.length );
+        return -2;
     }
 
     /* Create the initialised output buffer. Initialised because we don't want memory leaks
@@ -276,7 +288,11 @@ int nwipe_random_pass( NWIPE_METHOD_SIGNATURE )
     }
 
     /* Seed the PRNG. */
-    c->prng->init( &c->prng_state, &c->prng_seed );
+    if( c->prng->init( &c->prng_state, &c->prng_seed ) )
+    {
+        nwipe_log( NWIPE_LOG_ERROR, "Initialising PRNG failed on erasure" );
+        return -2;
+    }
 
     /* Reset the file pointer. */
     offset = lseek( c->device_fd, 0, SEEK_SET );
@@ -319,7 +335,11 @@ int nwipe_random_pass( NWIPE_METHOD_SIGNATURE )
         }
 
         /* Fill the output buffer with the random pattern. */
-        c->prng->read( &c->prng_state, b, blocksize );
+        if( c->prng->read( &c->prng_state, b, blocksize ) )
+        {
+            nwipe_log( NWIPE_LOG_ERROR, "Reading PRNG failed during erasure" );
+            return -2;
+        }
 
         /* For the first block only, check the prng actually wrote something to the buffer */
         if( z == c->device_size )

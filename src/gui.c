@@ -6598,9 +6598,27 @@ void* nwipe_gui_status( void* ptr )
                         }
                         else
                         {
-                            wattron( main_window, COLOR_PAIR( 9 ) );
-                            mvwprintw( main_window, yy++, 4, "(>>> IOERROR! <<<, code %i) ", c[i]->result );
-                            wattroff( main_window, COLOR_PAIR( 9 ) );
+                            switch( c[i]->result )
+                            {
+                                case -1:
+                                    wattron( main_window, COLOR_PAIR( 9 ) );
+                                    mvwprintw( main_window, yy++, 4, "(>>> I/O ERROR! <<<, code %i) ", c[i]->result );
+                                    wattroff( main_window, COLOR_PAIR( 9 ) );
+                                    break;
+
+                                case -2:
+                                    wattron( main_window, COLOR_PAIR( 9 ) );
+                                    mvwprintw( main_window, yy++, 4, "(>>> PRNG ERROR! <<<, code %i) ", c[i]->result );
+                                    wattroff( main_window, COLOR_PAIR( 9 ) );
+                                    break;
+
+                                default:
+                                    wattron( main_window, COLOR_PAIR( 9 ) );
+                                    mvwprintw(
+                                        main_window, yy++, 4, "(>>> SANITY ERROR! <<<, code %i) ", c[i]->result );
+                                    wattroff( main_window, COLOR_PAIR( 9 ) );
+                                    break;
+                            }
                         }
 
                     } /* child returned */
