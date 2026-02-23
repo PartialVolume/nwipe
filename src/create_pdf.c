@@ -60,12 +60,6 @@ float height;
 float page_width;
 int status_icon;
 
-int create_pdf( nwipe_context_t* ptr )
-{
-    create_single_disc_pdf( ptr );
-    return 0;
-}
-
 int nwipe_get_smart_data( nwipe_context_t* c )
 {
     FILE* fp;

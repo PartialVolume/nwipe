@@ -678,7 +678,7 @@ int nwipe_log_sysinfo()
     return 0;
 }
 
-void nwipe_log_summary( nwipe_context_t** ptr, int nwipe_selected )
+void nwipe_log_summary( nwipe_thread_data_ptr_t* ptrx, nwipe_context_t** ptr, int nwipe_selected )
 {
     /* Prints two summary tables, the first is the device pass and verification summary
      * and the second is the main summary table detaining the drives, status, throughput,
@@ -933,9 +933,12 @@ void nwipe_log_summary( nwipe_context_t** ptr, int nwipe_selected )
         {
             /* to have some progress indication. can help if there are many/slow disks */
             fprintf( stderr, "." );
-            create_pdf( c[i] );
+            create_single_disc_pdf( c[i] );
         }
     }
+
+    /* Create a PDF that contains, system information and wipe status for all drives */
+    // create_system_multi_disc_pdf( ptrx );
 
     /* Determine the size of throughput so that the correct nomenclature can be used */
     Determine_C_B_nomenclature( total_throughput, total_throughput_string, 13 );
