@@ -1314,7 +1314,7 @@ int main( int argc, char** argv )
     }
 
     /* Generate and send the drive status summary to the log */
-    nwipe_log_summary( c2, nwipe_selected );
+    nwipe_log_summary( &nwipe_thread_data_ptr, c2, nwipe_selected );
 
     /* Print a one line status message for the user */
     if( return_status == 0 || return_status == 1 )

@@ -48,8 +48,6 @@
  * @param pointer to a drive context
  * @return returns 0 on success < 1 on error
  */
-int create_pdf( nwipe_context_t* ptr );
-
 int create_single_disc_pdf( nwipe_context_t* ptr );
 
 int nwipe_get_smart_data( nwipe_context_t* );
@@ -57,5 +55,13 @@ int nwipe_get_smart_data( nwipe_context_t* );
 void create_header_and_footer( nwipe_context_t*, char* );
 
 void pdf_header_footer_text( nwipe_context_t*, char* );
+
+/**
+ * Create the disk erase report for system/multiple disk
+ * (all disks being wiped in one in PDF format
+ * @param pointer to a drive context
+ * @return returns 0 on success < 1 on error
+ */
+int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx );
 
 #endif /* CREATE_PDF_H_ */
