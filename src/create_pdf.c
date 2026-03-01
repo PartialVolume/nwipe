@@ -264,7 +264,7 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
     config_setting_t* setting;
     extern config_t nwipe_cfg;
 
-    pdf_add_text_wrap( pdf, NULL, pdf_footer, 12, 0, 30, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+    pdf_add_text_wrap( pdf, NULL, pdf_footer, 12, 0, 30, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     pdf_add_line( pdf, NULL, 50, 50, 550, 50, 3, PDF_BLACK );  // Footer full width Line
     pdf_add_line( pdf, NULL, 50, 650, 550, 650, 3, PDF_BLACK );  // Header full width Line
     pdf_add_line( pdf, NULL, 175, 734, 425, 734, 3, PDF_BLACK );  // Header Page number, disk model divider line
@@ -274,18 +274,20 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
     if( nwipe_options.PDFtag || nwipe_options.PDF_toggle_host_info )
     {
         snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
-        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 718, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 718, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
         snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
-        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 703, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 703, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
 
         /* Display host UUID & S/N is host visibility is enabled in PDF */
         if( nwipe_options.PDF_toggle_host_info )
         {
             snprintf(
                 hostid_header, sizeof( hostid_header ), " %s: %s ", "System S/N", dmidecode_system_serial_number );
-            pdf_add_text_wrap( pdf, NULL, hostid_header, 11, 0, 688, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+            pdf_add_text_wrap(
+                pdf, NULL, hostid_header, 11, 0, 688, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
             snprintf( hostid_header, sizeof( hostid_header ), " %s: %s ", "System uuid", dmidecode_system_uuid );
-            pdf_add_text_wrap( pdf, NULL, hostid_header, 11, 0, 673, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+            pdf_add_text_wrap(
+                pdf, NULL, hostid_header, 11, 0, 673, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
         }
 
         /* libconfig: Obtain PDF_Certificate.User_Defined_Tag from nwipe.conf */
@@ -297,26 +299,27 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
             {
                 snprintf( tag_header, sizeof( tag_header ), " %s: %s ", "Tag", user_defined_tag );
                 pdf_add_text_wrap(
-                    pdf, NULL, tag_header, 11, 0, 658, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+                    pdf, NULL, tag_header, 11, 0, 658, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
             }
         }
         else
         {
             snprintf( tag_header, sizeof( tag_header ), " %s: %s ", "Tag", "libconfig:tag error" );
-            pdf_add_text_wrap( pdf, NULL, tag_header, 11, 0, 658, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+            pdf_add_text_wrap( pdf, NULL, tag_header, 11, 0, 658, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
         }
     }
     else
     {
         snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
-        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 696, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 696, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
         snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
-        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 681, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 681, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     }
     pdf_set_font( pdf, "Helvetica" );
 
-    pdf_add_text_wrap( pdf, NULL, "Disk Erasure Report", 24, 0, 765, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+    pdf_add_text_wrap(
+        pdf, NULL, "Disk Erasure Report", 24, 0, 765, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     snprintf( barcode, sizeof( barcode ), "%s:%s", c->device_model, c->device_serial_no );
-    pdf_add_text_wrap( pdf, NULL, page_title, 14, 0, 745, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+    pdf_add_text_wrap( pdf, NULL, page_title, 14, 0, 745, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     pdf_add_barcode( pdf, NULL, PDF_BARCODE_128A, 100, 790, 400, 25, barcode, PDF_BLACK );
 }

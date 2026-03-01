@@ -148,7 +148,6 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
 
     /* ------------------------ */
     /* Organisation Information */
-
     pdf_add_line( pdf, NULL, 50, 550, 550, 550, 1, PDF_GRAY );
     pdf_add_text( pdf, NULL, "Organisation Performing The Disk Erasure", 12, 50, 630, PDF_BLUE );
     pdf_add_text( pdf, NULL, "Business Name:", 12, 60, 610, PDF_GRAY );
