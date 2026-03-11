@@ -317,3 +317,24 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
     pdf_add_text_wrap( pdf, NULL, page_title, 14, 0, 745, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     pdf_add_barcode( pdf, NULL, PDF_BARCODE_128A, 100, 790, 400, 25, barcode, PDF_BLACK );
 }
+
+uint32_t determine_color_for_size_apparent( nwipe_context_t* c )
+{
+    /* -----------------
+     * Size (Apparent)
+     * Determines whether the text that shows the apparent disc size should be red or green.
+     * The text is red if hidden sectors are detected, green if no hidden sectors or the device
+     * doesn't support HPA such as NVMe
+     */
+
+    if( ( c->device_size == c->Calculated_real_max_size_in_bytes ) || c->device_type == NWIPE_DEVICE_NVME
+        || c->device_type == NWIPE_DEVICE_VIRT || c->HPA_status == HPA_NOT_APPLICABLE
+        || c->HPA_status != HPA_UNKNOWN )
+    {
+        return PDF_DARK_GREEN;
+    }
+    else
+    {
+        return PDF_RED;
+    }
+}

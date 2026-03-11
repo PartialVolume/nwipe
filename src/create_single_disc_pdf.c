@@ -75,6 +75,8 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     extern config_t nwipe_cfg;
     extern char nwipe_config_file[];
 
+    uint32_t text_color_size_apparent; // local use of color
+
     //    char pdf_footer[MAX_PDF_FOOTER_TEXT_LENGTH];
     nwipe_context_t* c;
     c = ptr;
@@ -261,15 +263,8 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     pdf_add_text( pdf, NULL, "Size(Apparent): ", 12, 60, 390, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
     snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c->device_size_text, c->device_size );
-    if( ( c->device_size == c->Calculated_real_max_size_in_bytes ) || c->device_type == NWIPE_DEVICE_NVME
-        || c->device_type == NWIPE_DEVICE_VIRT || c->HPA_status == HPA_NOT_APPLICABLE || c->HPA_status != HPA_UNKNOWN )
-    {
-        pdf_add_text( pdf, NULL, device_size, text_size_data, 145, 390, PDF_DARK_GREEN );
-    }
-    else
-    {
-        pdf_add_text( pdf, NULL, device_size, text_size_data, 145, 390, PDF_RED );
-    }
+    text_color_size_apparent = determine_color_for_size_apparent( c ); // RED hidden sectors detected, GREEN actual size
+    pdf_add_text( pdf, NULL, device_size, text_size_data, 145, 390, text_color_size_apparent );
     pdf_set_font( pdf, "Helvetica" );
 
     /* Size (Real) */

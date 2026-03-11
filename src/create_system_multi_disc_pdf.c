@@ -89,7 +89,8 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     c = nwipe_thread_data_ptr->c;
     nwipe_misc_thread_data = nwipe_thread_data_ptr->nwipe_misc_thread_data;
 
-    int i;  // general index
+    size_t i;  // general index
+    uint32_t text_color_size_apparent; // local use of color
 
     //    char model_header[50] = ""; /* Model text in the header */
     //    char serial_header[30] = ""; /* Serial number text in the header */
@@ -233,14 +234,14 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      * Disk Information
      */
     pdf_add_line( pdf, NULL, 50, 350, 550, 350, 1, PDF_GRAY );
-    pdf_add_text( pdf, NULL, "Disk Information", 12, 50, 430, PDF_BLUE );
+    pdf_add_text( pdf, NULL, "Disk Erasure status", 12, 50, 430, PDF_BLUE );
 
     /* For each disc wiped, print an entry */
     for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
     {
-        if( c[0]->device_serial_no[0] == 0 )
+        if( c[i]->device_serial_no[0] == 0 )
         {
-            snprintf( c[0]->device_serial_no, sizeof( c[0]->device_serial_no ), "Unknown" );
+            snprintf( c[i]->device_serial_no, sizeof( c[i]->device_serial_no ), "Unknown" );
         }
         // WARNING DELETE THIS NWIPE_LOG command
         nwipe_log( NWIPE_LOG_WARNING, "Model: %s", c[i]->device_name_without_path );
@@ -254,16 +255,19 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text( pdf, NULL, "S/N:", text_size_data, 200, 410, PDF_DARK_GREEN );
         pdf_add_text( pdf, NULL, c[i]->device_serial_no, text_size_data, 230, 410, PDF_DARK_GREEN );
         snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
-        if( ( c[i]->device_size == c[i]->Calculated_real_max_size_in_bytes ) || c[i]->device_type == NWIPE_DEVICE_NVME
-            || c[i]->device_type == NWIPE_DEVICE_VIRT || c[i]->HPA_status == HPA_NOT_APPLICABLE
-            || c[i]->HPA_status != HPA_UNKNOWN )
-        {
-            pdf_add_text( pdf, NULL, device_size, text_size_data, 350, 410, PDF_DARK_GREEN );
-        }
-        else
-        {
-            pdf_add_text( pdf, NULL, device_size, text_size_data, 350, 410, PDF_RED );
-        }
+
+        /* Size (apparent) */
+        pdf_add_text( pdf, NULL, "Size(Apparent): ", text_size_data, 60, 400, PDF_BLACK );
+        snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
+        text_color_size_apparent = determine_color_for_size_apparent( c[i] ); // RED hidden sectors detected, GREEN actual size
+        pdf_add_text( pdf, NULL, device_size, text_size_data, 150, 400, text_color_size_apparent );
+
+        /* Size (real) */
+
+
+
+
+
     }
 
     /*****************************

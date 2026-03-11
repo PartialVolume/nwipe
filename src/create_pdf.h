@@ -1,3 +1,5 @@
+#ifndef CREATE_PDF_H_
+#define CREATE_PDF_H_
 /*.
  *  create_pdf.h: The header file for the pdf creation routines
  *
@@ -17,9 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  */
-
-#ifndef CREATE_PDF_H_
-#define CREATE_PDF_H_
 
 #define MAX_PDF_FOOTER_TEXT_LENGTH 100
 #define MAX_PDF_TAG_LENGTH 40
@@ -63,5 +62,16 @@ void pdf_header_footer_text( nwipe_context_t*, char* );
  * @return returns 0 on success < 1 on error
  */
 int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx );
+
+/**
+ * Size (Apparent)
+ * Determines whether the text that shows the apparent disc size
+ * should be red or green. The text is red if hidden sectors are
+ * detected, green if no hidden sectors or the device doesn't support
+ * HPA such as NVMe.
+ * @param pointer to a drive context
+ * @return returns to the RGB color, red or green
+ */
+uint32_t determine_color_for_size_apparent( nwipe_context_t* );
 
 #endif /* CREATE_PDF_H_ */
