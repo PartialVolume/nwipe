@@ -574,7 +574,7 @@ int main( int argc, char** argv )
     nwipe_log_sysinfo();
 
     /* The array of pointers to contexts that will actually be wiped. */
-    nwipe_context_t** c2 = (nwipe_context_t**) malloc( nwipe_enumerated * sizeof( nwipe_context_t* ) );
+    nwipe_context_t** c2 = (nwipe_context_t**) malloc( nwipe_enumerated * sizeof( nwipe_context_t* ));
     if( c2 == NULL )
     {
         nwipe_log( NWIPE_LOG_ERROR, "memory allocation for c2 failed" );

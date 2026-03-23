@@ -31,6 +31,8 @@
 #define STATUS_ICON_YELLOW_EXCLAMATION 2
 #define STATUS_ICON_RED_CROSS 3
 
+#define LEFT_MARGIN_TEXT 60
+
 /* Additional colors that supplement the standard colors in pdfgen.h
  */
 /*! Utility macro to provide gray */
@@ -73,5 +75,9 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx );
  * @return returns to the RGB color, red or green
  */
 uint32_t determine_color_for_size_apparent( nwipe_context_t* );
+
+void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c );
+
+void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c );
 
 #endif /* CREATE_PDF_H_ */

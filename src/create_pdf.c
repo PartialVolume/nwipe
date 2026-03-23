@@ -1,5 +1,5 @@
 /*
- *  create_pdf.c: Functions that create the PDF erasure certificates
+ *  create_pdf.c: Common functions that create the PDF erasure certificates
  *
  *  Copyright PartialVolume <https://github.com/PartialVolume>.
  *
@@ -336,5 +336,116 @@ uint32_t determine_color_for_size_apparent( nwipe_context_t* c )
     else
     {
         return PDF_RED;
+    }
+}
+
+void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c )
+{
+    extern struct pdf_doc *pdf;
+    extern struct pdf_object *page;
+
+    char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
+
+    if( c->device_type == NWIPE_DEVICE_NVME || c->device_type == NWIPE_DEVICE_VIRT
+        || c->HPA_status == HPA_NOT_APPLICABLE )
+    {
+        snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c->device_size_text, c->device_size );
+        pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_DARK_GREEN );
+    }
+    else
+    {
+        /* If the calculared real max size as determined from HPA/DCO and libata data is larger than
+         * or equal to the apparent device size then display that value in green.
+         */
+        if( c->Calculated_real_max_size_in_bytes >= c->device_size )
+        {
+            /* displays the real max size of the disc from the DCO displayed in Green */
+            snprintf( device_size,
+                      sizeof( device_size ),
+                      "%s, %lli bytes",
+                      c->Calculated_real_max_size_in_bytes_text,
+                      c->Calculated_real_max_size_in_bytes );
+            pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_DARK_GREEN );
+        }
+        else
+        {
+            /* If there is no real max size either because the drive or adapter doesn't support it */
+            if( c->HPA_status == HPA_UNKNOWN )
+            {
+                snprintf( device_size, sizeof( device_size ), "Unknown" );
+                pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_RED );
+            }
+            else
+            {
+                /* we are already here because c->DCO_reported_real_max_size < 1 so if HPA enabled then use the
+                 * value we determine from whether HPA set, HPA real exist and if not assume libata's value*/
+                if( c->HPA_status == HPA_ENABLED )
+                {
+                    snprintf( device_size,
+                              sizeof( device_size ),
+                              "%s, %lli bytes",
+                              c->device_size_text,
+                              c->Calculated_real_max_size_in_bytes );
+                    pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_DARK_GREEN );
+                }
+                else
+                {
+                    /* Sanity check, should never get here! */
+                    snprintf( device_size, sizeof( device_size ), "Sanity: HPA_status = %i", c->HPA_status );
+                    pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_RED );
+                }
+            }
+        }
+    }
+}
+
+void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c )
+{
+    char bytes_erased[50] = "";
+    char bytes_percent_str[7] = "";
+
+    /* Bytes erased is not applicable when user only requested a verify */
+    if( nwipe_options.method == &nwipe_verify_one || nwipe_options.method == &nwipe_verify_zero )
+    {
+        snprintf( bytes_erased, sizeof( bytes_erased ), "Not applicable to method" );
+        pdf_add_text( pdf, NULL, bytes_erased, text_size_data, xoff, yoff, PDF_BLACK );
+    }
+    else
+    {
+        if( c->device_type == NWIPE_DEVICE_NVME || c->device_type == NWIPE_DEVICE_VIRT
+            || c->HPA_status == HPA_NOT_APPLICABLE )
+        {
+            convert_double_to_string( bytes_percent_str,
+                                      (double) ( (double) c->bytes_erased / (double) c->device_size ) * 100 );
+
+            snprintf( bytes_erased, sizeof( bytes_erased ), "%lli, (%s%%)", c->bytes_erased, bytes_percent_str );
+
+            if( c->bytes_erased == c->device_size )
+            {
+                pdf_add_text( pdf, NULL, bytes_erased, text_size_data, xoff, yoff, PDF_DARK_GREEN );
+            }
+            else
+            {
+                pdf_add_text( pdf, NULL, bytes_erased, text_size_data, xoff, yoff, PDF_RED );
+            }
+        }
+        else
+        {
+
+            convert_double_to_string(
+                bytes_percent_str,
+                (double) ( (double) c->bytes_erased / (double) c->Calculated_real_max_size_in_bytes ) * 100 );
+
+            snprintf( bytes_erased, sizeof( bytes_erased ), "%lli, (%s%%)", c->bytes_erased, bytes_percent_str );
+
+            if( c->bytes_erased == c->Calculated_real_max_size_in_bytes )
+            {
+                pdf_add_text( pdf, NULL, bytes_erased, text_size_data, xoff, yoff, PDF_DARK_GREEN );
+            }
+            else
+            {
+                pdf_add_text( pdf, NULL, bytes_erased, text_size_data, xoff, yoff, PDF_RED );
+            }
+        }
     }
 }

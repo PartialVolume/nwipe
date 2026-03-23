@@ -46,7 +46,7 @@
 #include <libconfig.h>
 #include "conf.h"
 
-#define text_size_data 10
+#define TEXT_SIZE_DATA 10
 
 extern struct pdf_doc* pdf;
 extern struct pdf_object* page;
@@ -108,6 +108,9 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     char errors[50] = "";
     char throughput_txt[50] = "";
     char bytes_percent_str[7] = "";
+
+    size_t yoffset;
+    size_t line_spacing;
 
     //    int status_icon;
 
@@ -172,19 +175,19 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_set_font( pdf, "Helvetica-Bold" );
         if( config_setting_lookup_string( setting, "Business_Name", &business_name ) )
         {
-            pdf_add_text( pdf, NULL, business_name, text_size_data, 153, 610, PDF_BLACK );
+            pdf_add_text( pdf, NULL, business_name, TEXT_SIZE_DATA, 153, 610, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Business_Address", &business_address ) )
         {
-            pdf_add_text( pdf, NULL, business_address, text_size_data, 165, 590, PDF_BLACK );
+            pdf_add_text( pdf, NULL, business_address, TEXT_SIZE_DATA, 165, 590, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Contact_Name", &contact_name ) )
         {
-            pdf_add_text( pdf, NULL, contact_name, text_size_data, 145, 570, PDF_BLACK );
+            pdf_add_text( pdf, NULL, contact_name, TEXT_SIZE_DATA, 145, 570, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Contact_Phone", &contact_phone ) )
         {
-            pdf_add_text( pdf, NULL, contact_phone, text_size_data, 390, 570, PDF_BLACK );
+            pdf_add_text( pdf, NULL, contact_phone, TEXT_SIZE_DATA, 390, 570, PDF_BLACK );
         }
         pdf_set_font( pdf, "Helvetica" );
     }
@@ -209,19 +212,19 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_set_font( pdf, "Helvetica-Bold" );
         if( config_setting_lookup_string( setting, "Customer_Name", &customer_name ) )
         {
-            pdf_add_text( pdf, NULL, customer_name, text_size_data, 100, 510, PDF_BLACK );
+            pdf_add_text( pdf, NULL, customer_name, TEXT_SIZE_DATA, 100, 510, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Customer_Address", &customer_address ) )
         {
-            pdf_add_text( pdf, NULL, customer_address, text_size_data, 110, 490, PDF_BLACK );
+            pdf_add_text( pdf, NULL, customer_address, TEXT_SIZE_DATA, 110, 490, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Contact_Name", &customer_contact_name ) )
         {
-            pdf_add_text( pdf, NULL, customer_contact_name, text_size_data, 145, 470, PDF_BLACK );
+            pdf_add_text( pdf, NULL, customer_contact_name, TEXT_SIZE_DATA, 145, 470, PDF_BLACK );
         }
         if( config_setting_lookup_string( setting, "Contact_Phone", &customer_contact_phone ) )
         {
-            pdf_add_text( pdf, NULL, customer_contact_phone, text_size_data, 390, 470, PDF_BLACK );
+            pdf_add_text( pdf, NULL, customer_contact_phone, TEXT_SIZE_DATA, 390, 470, PDF_BLACK );
         }
         pdf_set_font( pdf, "Helvetica" );
     }
@@ -233,41 +236,134 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     /******************
      * Disk Information
      */
-    pdf_add_line( pdf, NULL, 50, 350, 550, 350, 1, PDF_GRAY );
     pdf_add_text( pdf, NULL, "Disk Erasure status", 12, 50, 430, PDF_BLUE );
 
-    /* For each disc wiped, print an entry */
+    /************************
+     * Technician/Operator ID
+     */
+    pdf_add_line( pdf, NULL, 50, 120, 550, 120, 1, PDF_GRAY );
+    pdf_add_text( pdf, NULL, "Technician/Operator ID", 12, 50, 100, PDF_BLUE );
+    pdf_add_text( pdf, NULL, "Name/ID:", 12, 60, 80, PDF_GRAY );
+    pdf_add_text( pdf, NULL, "Signature:", 12, 300, 100, PDF_BLUE );
+    pdf_add_line( pdf, NULL, 360, 65, 550, 65, 1, PDF_GRAY );
+
+    pdf_set_font( pdf, "Helvetica-Bold" );
+    /* Obtain organisational details from nwipe.conf - See conf.c */
+    setting = config_lookup( &nwipe_cfg, "Organisation_Details" );
+    if( config_setting_lookup_string( setting, "Op_Tech_Name", &op_tech_name ) )
+    {
+        pdf_add_text( pdf, NULL, op_tech_name, TEXT_SIZE_DATA, 120, 80, PDF_BLACK );
+    }
+    pdf_set_font( pdf, "Helvetica" );
+
+    yoffset = 410; // start y offset of disc details
+    line_spacing = 10; // vertical distance between lines
+
+    /*************************************
+     * For each disc wiped, print an entry
+     */
     for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
     {
         if( c[i]->device_serial_no[0] == 0 )
         {
             snprintf( c[i]->device_serial_no, sizeof( c[i]->device_serial_no ), "Unknown" );
         }
-        // WARNING DELETE THIS NWIPE_LOG command
-        nwipe_log( NWIPE_LOG_WARNING, "Model: %s", c[i]->device_name_without_path );
 
         /************
          * Make/model/serial number
          */
         pdf_set_font( pdf, "Courier-Bold" );
-        pdf_add_text( pdf, NULL, "Make:", text_size_data, 60, 410, PDF_DARK_GREEN );
-        pdf_add_text( pdf, NULL, c[i]->device_model, text_size_data, 90, 410, PDF_DARK_GREEN );
-        pdf_add_text( pdf, NULL, "S/N:", text_size_data, 200, 410, PDF_DARK_GREEN );
-        pdf_add_text( pdf, NULL, c[i]->device_serial_no, text_size_data, 230, 410, PDF_DARK_GREEN );
+        pdf_add_text( pdf, NULL, "Make:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text( pdf, NULL, c[i]->device_model, TEXT_SIZE_DATA, 90, yoffset, PDF_DARK_GREEN );
+        pdf_add_text( pdf, NULL, "S/N:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        pdf_add_text( pdf, NULL, c[i]->device_serial_no, TEXT_SIZE_DATA, 330, yoffset, PDF_DARK_GREEN );
         snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
 
-        /* Size (apparent) */
-        pdf_add_text( pdf, NULL, "Size(Apparent): ", text_size_data, 60, 400, PDF_BLACK );
+        /************
+         * Size (apparent)
+         */
+        yoffset=yoffset - line_spacing; // next line
+        pdf_add_text( pdf, NULL, "Size(Apparent): ", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
         text_color_size_apparent = determine_color_for_size_apparent( c[i] ); // RED hidden sectors detected, GREEN actual size
-        pdf_add_text( pdf, NULL, device_size, text_size_data, 150, 400, text_color_size_apparent );
+        pdf_add_text( pdf, NULL, device_size, TEXT_SIZE_DATA, 150, yoffset, text_color_size_apparent );
 
-        /* Size (real) */
+        /************
+         * Size (real)
+         */
+        pdf_add_text( pdf, NULL, "Size(Real): ", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        pdf_add_text_size_real( 370, yoffset, c[i] );
+
+        /************
+         * start time
+         */
+        yoffset=yoffset - line_spacing; // next line
+        pdf_add_text( pdf, NULL, "Start time:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        p = localtime( &c[i]->start_time );
+        snprintf( start_time_text,
+                  sizeof( start_time_text ),
+                  "%i/%02i/%02i %02i:%02i:%02i",
+                  1900 + p->tm_year,
+                  1 + p->tm_mon,
+                  p->tm_mday,
+                  p->tm_hour,
+                  p->tm_min,
+                  p->tm_sec );
+        pdf_add_text( pdf, NULL, start_time_text, TEXT_SIZE_DATA, 150, yoffset, PDF_BLACK );
+
+        /*************
+         * end time
+         */
+        pdf_add_text( pdf, NULL, "End time:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        p = localtime( &c[i]->end_time );
+        snprintf( end_time_text,
+                  sizeof( end_time_text ),
+                  "%i/%02i/%02i %02i:%02i:%02i",
+                  1900 + p->tm_year,
+                  1 + p->tm_mon,
+                  p->tm_mday,
+                  p->tm_hour,
+                  p->tm_min,
+                  p->tm_sec );
+        pdf_add_text( pdf, NULL, end_time_text, TEXT_SIZE_DATA, 360, yoffset, PDF_BLACK );
+
+        /*************
+         * Duration
+         */
+        yoffset=yoffset - line_spacing; // next line
+        pdf_add_text( pdf, NULL, "Duration:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text( pdf, NULL, c[i]->duration_str, TEXT_SIZE_DATA, 150, yoffset, PDF_BLACK );
+
+        /********
+         * Errors
+         */
+        pdf_add_text( pdf, NULL, "Errors(pass/sync/verify):", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        snprintf( errors, sizeof( errors ), "%llu/%llu/%llu", c[i]->pass_errors, c[i]->fsyncdata_errors, c[i]->verify_errors );
+        if( c[i]->pass_errors != 0 || c[i]->fsyncdata_errors != 0 || c[i]->verify_errors != 0 )
+        {
+            pdf_add_text( pdf, NULL, errors, TEXT_SIZE_DATA, 450, yoffset, PDF_RED );
+        }
+        else
+        {
+            pdf_add_text( pdf, NULL, errors, TEXT_SIZE_DATA, 450, yoffset, PDF_DARK_GREEN );
+        }
+
+        /* ************
+         * bytes erased
+         */
+        yoffset=yoffset - line_spacing; // next line
+        pdf_add_text( pdf, NULL, "*Bytes Erased:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text_bytes_erased( 150, yoffset, c[i] );
+
+        /************
+         * Throughput
+         */
+        pdf_add_text( pdf, NULL, "Throughput:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        snprintf( throughput_txt, sizeof( throughput_txt ), "%s/sec", c[i]->throughput_txt );
+        pdf_add_text( pdf, NULL, throughput_txt, TEXT_SIZE_DATA, 370, yoffset, PDF_BLACK );
 
 
-
-
-
+        yoffset=yoffset - (line_spacing * 2); // insert a blank line between individual disc details
     }
 
     /*****************************
