@@ -80,4 +80,6 @@ void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c );
 
 void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c );
 
+void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour );
+
 #endif /* CREATE_PDF_H_ */

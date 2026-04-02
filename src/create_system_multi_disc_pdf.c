@@ -90,7 +90,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     nwipe_misc_thread_data = nwipe_thread_data_ptr->nwipe_misc_thread_data;
 
     size_t i;  // general index
-    uint32_t text_color_size_apparent; // local use of color
+    uint32_t text_color_size_apparent;  // local use of color
 
     //    char model_header[50] = ""; /* Model text in the header */
     //    char serial_header[30] = ""; /* Serial number text in the header */
@@ -256,8 +256,8 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     }
     pdf_set_font( pdf, "Helvetica" );
 
-    yoffset = 410; // start y offset of disc details
-    line_spacing = 10; // vertical distance between lines
+    yoffset = 410;  // start y offset of disc details
+    line_spacing = 10;  // vertical distance between lines
 
     /*************************************
      * For each disc wiped, print an entry
@@ -282,10 +282,11 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         /************
          * Size (apparent)
          */
-        yoffset=yoffset - line_spacing; // next line
+        yoffset = yoffset - line_spacing;  // next line
         pdf_add_text( pdf, NULL, "Size(Apparent): ", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
-        text_color_size_apparent = determine_color_for_size_apparent( c[i] ); // RED hidden sectors detected, GREEN actual size
+        text_color_size_apparent =
+            determine_color_for_size_apparent( c[i] );  // RED hidden sectors detected, GREEN actual size
         pdf_add_text( pdf, NULL, device_size, TEXT_SIZE_DATA, 150, yoffset, text_color_size_apparent );
 
         /************
@@ -297,7 +298,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         /************
          * start time
          */
-        yoffset=yoffset - line_spacing; // next line
+        yoffset = yoffset - line_spacing;  // next line
         pdf_add_text( pdf, NULL, "Start time:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         p = localtime( &c[i]->start_time );
         snprintf( start_time_text,
@@ -330,7 +331,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         /*************
          * Duration
          */
-        yoffset=yoffset - line_spacing; // next line
+        yoffset = yoffset - line_spacing;  // next line
         pdf_add_text( pdf, NULL, "Duration:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         pdf_add_text( pdf, NULL, c[i]->duration_str, TEXT_SIZE_DATA, 150, yoffset, PDF_BLACK );
 
@@ -338,7 +339,12 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
          * Errors
          */
         pdf_add_text( pdf, NULL, "Errors(pass/sync/verify):", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
-        snprintf( errors, sizeof( errors ), "%llu/%llu/%llu", c[i]->pass_errors, c[i]->fsyncdata_errors, c[i]->verify_errors );
+        snprintf( errors,
+                  sizeof( errors ),
+                  "%llu/%llu/%llu",
+                  c[i]->pass_errors,
+                  c[i]->fsyncdata_errors,
+                  c[i]->verify_errors );
         if( c[i]->pass_errors != 0 || c[i]->fsyncdata_errors != 0 || c[i]->verify_errors != 0 )
         {
             pdf_add_text( pdf, NULL, errors, TEXT_SIZE_DATA, 450, yoffset, PDF_RED );
@@ -351,7 +357,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         /* ************
          * bytes erased
          */
-        yoffset=yoffset - line_spacing; // next line
+        yoffset = yoffset - line_spacing;  // next line
         pdf_add_text( pdf, NULL, "*Bytes Erased:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         pdf_add_text_bytes_erased( 150, yoffset, c[i] );
 
@@ -360,10 +366,22 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
          */
         pdf_add_text( pdf, NULL, "Throughput:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         snprintf( throughput_txt, sizeof( throughput_txt ), "%s/sec", c[i]->throughput_txt );
-        pdf_add_text( pdf, NULL, throughput_txt, TEXT_SIZE_DATA, 370, yoffset, PDF_BLACK );
+        pdf_add_text( pdf, NULL, throughput_txt, TEXT_SIZE_DATA, 350, yoffset, PDF_BLACK );
 
+        /********
+         * Method
+         */
+        yoffset = yoffset - line_spacing;  // next line
+        pdf_add_text( pdf, NULL, "Method:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text( pdf, NULL, nwipe_method_label( nwipe_options.method ), TEXT_SIZE_DATA, 150, yoffset, PDF_BLACK );
 
-        yoffset=yoffset - (line_spacing * 2); // insert a blank line between individual disc details
+        /***********
+         * prng type
+         */
+        pdf_add_text( pdf, NULL, "PRNG algorithm:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        pdf_add_text_prng_type( 395, yoffset, PDF_BLACK );
+
+        yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
 
     /*****************************

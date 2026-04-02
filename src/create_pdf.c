@@ -328,8 +328,7 @@ uint32_t determine_color_for_size_apparent( nwipe_context_t* c )
      */
 
     if( ( c->device_size == c->Calculated_real_max_size_in_bytes ) || c->device_type == NWIPE_DEVICE_NVME
-        || c->device_type == NWIPE_DEVICE_VIRT || c->HPA_status == HPA_NOT_APPLICABLE
-        || c->HPA_status != HPA_UNKNOWN )
+        || c->device_type == NWIPE_DEVICE_VIRT || c->HPA_status == HPA_NOT_APPLICABLE || c->HPA_status != HPA_UNKNOWN )
     {
         return PDF_DARK_GREEN;
     }
@@ -341,8 +340,8 @@ uint32_t determine_color_for_size_apparent( nwipe_context_t* c )
 
 void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c )
 {
-    extern struct pdf_doc *pdf;
-    extern struct pdf_object *page;
+    extern struct pdf_doc* pdf;
+    extern struct pdf_object* page;
 
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
 
@@ -448,4 +447,46 @@ void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c )
             }
         }
     }
+}
+
+void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour )
+{
+    char prng_type[50] = ""; /* type of prng, twister, isaac, isaac64 */
+
+    extern nwipe_prng_t nwipe_twister;
+    extern nwipe_prng_t nwipe_isaac;
+    extern nwipe_prng_t nwipe_isaac64;
+    extern nwipe_prng_t nwipe_add_lagg_fibonacci_prng;
+    extern nwipe_prng_t nwipe_xoroshiro256_prng;
+    extern nwipe_prng_t nwipe_splitmix64_prng;
+    extern nwipe_prng_t nwipe_aes_ctr_prng;
+    extern nwipe_prng_t nwipe_chacha20_prng;
+
+    if( nwipe_options.method == &nwipe_verify_one || nwipe_options.method == &nwipe_verify_zero
+        || nwipe_options.method == &nwipe_zero || nwipe_options.method == &nwipe_one )
+    {
+        snprintf( prng_type, sizeof( prng_type ), "N/A to method" );
+    }
+    else
+    {
+        if( nwipe_options.prng == &nwipe_twister )
+            snprintf( prng_type, sizeof( prng_type ), "Twister" );
+        else if( nwipe_options.prng == &nwipe_isaac )
+            snprintf( prng_type, sizeof( prng_type ), "Isaac (CSPRNG)" );
+        else if( nwipe_options.prng == &nwipe_isaac64 )
+            snprintf( prng_type, sizeof( prng_type ), "Isaac64 (CSPRNG)" );
+        else if( nwipe_options.prng == &nwipe_add_lagg_fibonacci_prng )
+            snprintf( prng_type, sizeof( prng_type ), "Fibonacci" );
+        else if( nwipe_options.prng == &nwipe_xoroshiro256_prng )
+            snprintf( prng_type, sizeof( prng_type ), "XORoshiro256" );
+        else if( nwipe_options.prng == &nwipe_splitmix64_prng )
+            snprintf( prng_type, sizeof( prng_type ), "SplitMix64" );
+        else if( nwipe_options.prng == &nwipe_chacha20_prng )
+            snprintf( prng_type, sizeof( prng_type ), "ChaCha20 (CSPRNG)" );
+        else if( nwipe_options.prng == &nwipe_aes_ctr_prng )
+            snprintf( prng_type, sizeof( prng_type ), "AES-CTR (CSPRNG)" );
+        else
+            snprintf( prng_type, sizeof( prng_type ), "Unknown" );
+    }
+    pdf_add_text( pdf, NULL, prng_type, text_size_data, xoff, yoff, colour );
 }

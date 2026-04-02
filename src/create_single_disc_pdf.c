@@ -62,45 +62,25 @@ extern int status_icon;
 
 int create_single_disc_pdf( nwipe_context_t* ptr )
 {
-    extern nwipe_prng_t nwipe_twister;
-    extern nwipe_prng_t nwipe_isaac;
-    extern nwipe_prng_t nwipe_isaac64;
-    extern nwipe_prng_t nwipe_add_lagg_fibonacci_prng;
-    extern nwipe_prng_t nwipe_xoroshiro256_prng;
-    extern nwipe_prng_t nwipe_splitmix64_prng;
-    extern nwipe_prng_t nwipe_aes_ctr_prng;
-    extern nwipe_prng_t nwipe_chacha20_prng;
-
     /* Used by libconfig functions to retrieve data from nwipe.conf defined in conf.c */
     extern config_t nwipe_cfg;
     extern char nwipe_config_file[];
 
-    uint32_t text_color_size_apparent; // local use of color
+    uint32_t text_color_size_apparent;  // local use of color
 
     //    char pdf_footer[MAX_PDF_FOOTER_TEXT_LENGTH];
     nwipe_context_t* c;
     c = ptr;
-    //    char model_header[50] = ""; /* Model text in the header */
-    //    char serial_header[30] = ""; /* Serial number text in the header */
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
-    //    char barcode[100] = ""; /* Contents of the barcode, i.e model:serial */
     char verify[20] = ""; /* Verify option text */
     char blank[10] = ""; /* blanking pass, none, zeros, ones */
     char rounds[50] = ""; /* rounds ASCII numeric */
-    char prng_type[50] = ""; /* type of prng, twister, isaac, isaac64 */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
-    char bytes_erased[50] = "";
     char HPA_status_text[50] = "";
     char HPA_size_text[50] = "";
     char errors[50] = "";
     char throughput_txt[50] = "";
-    char bytes_percent_str[7] = "";
-
-    //    int status_icon;
-
-    //    float height;
-    //    float page_width;
 
     struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
                              .producer = "https://github.com/martijnvanbrummelen/nwipe",
@@ -263,7 +243,8 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     pdf_add_text( pdf, NULL, "Size(Apparent): ", 12, 60, 390, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
     snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c->device_size_text, c->device_size );
-    text_color_size_apparent = determine_color_for_size_apparent( c ); // RED hidden sectors detected, GREEN actual size
+    text_color_size_apparent =
+        determine_color_for_size_apparent( c );  // RED hidden sectors detected, GREEN actual size
     pdf_add_text( pdf, NULL, device_size, text_size_data, 145, 390, text_color_size_apparent );
     pdf_set_font( pdf, "Helvetica" );
 
@@ -381,34 +362,8 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      * prng type
      */
     pdf_add_text( pdf, NULL, "PRNG algorithm:", 12, 300, 270, PDF_GRAY );
-    if( nwipe_options.method == &nwipe_verify_one || nwipe_options.method == &nwipe_verify_zero
-        || nwipe_options.method == &nwipe_zero || nwipe_options.method == &nwipe_one )
-    {
-        snprintf( prng_type, sizeof( prng_type ), "Not applicable to method" );
-    }
-    else
-    {
-        if( nwipe_options.prng == &nwipe_twister )
-            snprintf( prng_type, sizeof( prng_type ), "Twister" );
-        else if( nwipe_options.prng == &nwipe_isaac )
-            snprintf( prng_type, sizeof( prng_type ), "Isaac (CSPRNG)" );
-        else if( nwipe_options.prng == &nwipe_isaac64 )
-            snprintf( prng_type, sizeof( prng_type ), "Isaac64 (CSPRNG)" );
-        else if( nwipe_options.prng == &nwipe_add_lagg_fibonacci_prng )
-            snprintf( prng_type, sizeof( prng_type ), "Fibonacci" );
-        else if( nwipe_options.prng == &nwipe_xoroshiro256_prng )
-            snprintf( prng_type, sizeof( prng_type ), "XORoshiro256" );
-        else if( nwipe_options.prng == &nwipe_splitmix64_prng )
-            snprintf( prng_type, sizeof( prng_type ), "SplitMix64" );
-        else if( nwipe_options.prng == &nwipe_chacha20_prng )
-            snprintf( prng_type, sizeof( prng_type ), "ChaCha20 (CSPRNG)" );
-        else if( nwipe_options.prng == &nwipe_aes_ctr_prng )
-            snprintf( prng_type, sizeof( prng_type ), "AES-CTR (CSPRNG)" );
-        else
-            snprintf( prng_type, sizeof( prng_type ), "Unknown" );
-    }
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text( pdf, NULL, prng_type, text_size_data, 395, 270, PDF_BLACK );
+    pdf_add_text_prng_type( 395, 270, PDF_BLACK );
     pdf_set_font( pdf, "Helvetica" );
 
     /******************************************************

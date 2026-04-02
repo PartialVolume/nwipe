@@ -971,7 +971,7 @@ void nwipe_log_summary( nwipe_thread_data_ptr_t* ptrx, nwipe_context_t** ptr, in
         convert_seconds_to_hours_minutes_seconds( total_duration_seconds, &hours, &minutes, &seconds );
 
         /* write the duration string to the drive context for later use by create_pdf() */
-        snprintf( c[i]->duration_str, sizeof( c[i]->duration_str  ), "%02i:%02i:%02i", hours, minutes, seconds );
+        snprintf( c[i]->duration_str, sizeof( c[i]->duration_str ), "%02i:%02i:%02i", hours, minutes, seconds );
 
         /* Device Model */
         strncpy( model, c[i]->device_model, 17 );
