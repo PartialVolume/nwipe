@@ -398,6 +398,9 @@ void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c )
     }
 }
 
+/*******************
+ * Bytes Erased
+ */
 void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c )
 {
     char bytes_erased[50] = "";
@@ -449,6 +452,10 @@ void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c )
     }
 }
 
+/*******************
+ * PRNG type
+ */
+
 void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour )
 {
     char prng_type[50] = ""; /* type of prng, twister, isaac, isaac64 */
@@ -489,4 +496,75 @@ void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour )
             snprintf( prng_type, sizeof( prng_type ), "Unknown" );
     }
     pdf_add_text( pdf, NULL, prng_type, text_size_data, xoff, yoff, colour );
+}
+
+/*******************
+ * Status of erasure
+ */
+
+void pdf_add_text_status_of_erasure( float text_xoff,
+                                     float text_yoff,
+                                     float ellipse_xoff,
+                                     float ellipse_yoff,
+                                     float ellipse_xradius,
+                                     float ellipse_yradius,
+                                     float angle,
+                                     nwipe_context_t* c )
+{
+    if( !strcmp( c->wipe_status_txt, "ERASED" )
+        && ( c->HPA_status == HPA_DISABLED || c->HPA_status == HPA_NOT_APPLICABLE || c->device_type == NWIPE_DEVICE_NVME
+             || c->device_type == NWIPE_DEVICE_VIRT ) )
+    {
+        pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, angle, PDF_DARK_GREEN );
+        pdf_add_ellipse( pdf,
+                         NULL,
+                         ellipse_xoff,
+                         ellipse_yoff,
+                         ellipse_xradius,
+                         ellipse_yradius,
+                         2,
+                         PDF_DARK_GREEN,
+                         PDF_TRANSPARENT );
+
+        /* Display the green tick icon in the header */
+        pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
+        status_icon = STATUS_ICON_GREEN_TICK;  // used later on page 2
+    }
+    else
+    {
+        if( !strcmp( c->wipe_status_txt, "ERASED" )
+            && ( c->HPA_status == HPA_ENABLED || c->HPA_status == HPA_UNKNOWN ) )
+        {
+            pdf_add_ellipse(
+                pdf, NULL, ellipse_xoff, ellipse_yoff, ellipse_xradius, ellipse_yradius, 2, PDF_RED, PDF_BLACK );
+            pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, angle, PDF_YELLOW );
+            pdf_add_text( pdf, NULL, "See Warning !", 12, 450, 290, PDF_RED );
+
+            /* Display the yellow exclamation icon in the header */
+            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
+            status_icon = STATUS_ICON_YELLOW_EXCLAMATION;  // used later on page 2
+        }
+        else
+        {
+            if( !strcmp( c->wipe_status_txt, "FAILED" ) )
+            {
+                // text shifted left slightly in ellipse due to extra character
+                pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff + 5, text_yoff, angle, PDF_RED );
+
+                // Display the red cross in the header
+                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
+                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
+            }
+            else
+            {
+                pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, PDF_RED );
+
+                // Print the red cross
+                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
+                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
+            }
+            pdf_add_ellipse(
+                pdf, NULL, ellipse_xoff, ellipse_yoff, ellipse_xradius, ellipse_yradius, 2, PDF_RED, PDF_TRANSPARENT );
+        }
+    }
 }

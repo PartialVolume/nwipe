@@ -82,4 +82,6 @@ void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c );
 
 void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour );
 
+void pdf_add_text_status_of_erasure( float, float, float, float, float, float, float, nwipe_context_t* c );
+
 #endif /* CREATE_PDF_H_ */

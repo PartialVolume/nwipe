@@ -381,6 +381,13 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text( pdf, NULL, "PRNG algorithm:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         pdf_add_text_prng_type( 395, yoffset, PDF_BLACK );
 
+        /***********
+         * test
+         */
+        yoffset = yoffset - line_spacing;  // next line
+        pdf_add_text_status_of_erasure(
+            LEFT_MARGIN_TEXT - 12, yoffset + 10, LEFT_MARGIN_TEXT - 15, yoffset + 30, 10, 35, 1.5707, c[i] );
+
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
 

@@ -301,7 +301,8 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      */
     pdf_add_text( pdf, NULL, "Status:", 12, 300, 290, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-
+    pdf_add_text_status_of_erasure( 365, 290, 390, 295, 45, 10, 0, c );
+#if 0
     if( !strcmp( c->wipe_status_txt, "ERASED" )
         && ( c->HPA_status == HPA_DISABLED || c->HPA_status == HPA_NOT_APPLICABLE || c->device_type == NWIPE_DEVICE_NVME
              || c->device_type == NWIPE_DEVICE_VIRT ) )
@@ -348,6 +349,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
             pdf_add_ellipse( pdf, NULL, 390, 295, 45, 10, 2, PDF_RED, PDF_TRANSPARENT );
         }
     }
+#endif
     pdf_set_font( pdf, "Helvetica" );
 
     /********
