@@ -302,55 +302,12 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     pdf_add_text( pdf, NULL, "Status:", 12, 300, 290, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
     pdf_add_text_status_of_erasure( 365, 290, 390, 295, 45, 10, 0, c );
-#if 0
-    if( !strcmp( c->wipe_status_txt, "ERASED" )
-        && ( c->HPA_status == HPA_DISABLED || c->HPA_status == HPA_NOT_APPLICABLE || c->device_type == NWIPE_DEVICE_NVME
-             || c->device_type == NWIPE_DEVICE_VIRT ) )
-    {
-        pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, 365, 290, PDF_DARK_GREEN );
-        pdf_add_ellipse( pdf, NULL, 390, 295, 45, 10, 2, PDF_DARK_GREEN, PDF_TRANSPARENT );
-
-        /* Display the green tick icon in the header */
-        pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
-        status_icon = STATUS_ICON_GREEN_TICK;  // used later on page 2
-    }
-    else
-    {
-        if( !strcmp( c->wipe_status_txt, "ERASED" )
-            && ( c->HPA_status == HPA_ENABLED || c->HPA_status == HPA_UNKNOWN ) )
-        {
-            pdf_add_ellipse( pdf, NULL, 390, 295, 45, 10, 2, PDF_RED, PDF_BLACK );
-            pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, 365, 290, PDF_YELLOW );
-            pdf_add_text( pdf, NULL, "See Warning !", 12, 450, 290, PDF_RED );
-
-            /* Display the yellow exclamation icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
-            status_icon = STATUS_ICON_YELLOW_EXCLAMATION;  // used later on page 2
-        }
-        else
-        {
-            if( !strcmp( c->wipe_status_txt, "FAILED" ) )
-            {
-                // text shifted left slightly in ellipse due to extra character
-                pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, 370, 290, PDF_RED );
-
-                // Display the red cross in the header
-                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
-                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
-            }
-            else
-            {
-                pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, 360, 290, PDF_RED );
-
-                // Print the red cross
-                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
-                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
-            }
-            pdf_add_ellipse( pdf, NULL, 390, 295, 45, 10, 2, PDF_RED, PDF_TRANSPARENT );
-        }
-    }
-#endif
     pdf_set_font( pdf, "Helvetica" );
+
+    /********
+     * Display the appropriate status icon (green tick, red cross, tick with exclamation)
+     */
+    display_status_icon( PDF_TYPE_SINGLE_DISC );
 
     /********
      * Method

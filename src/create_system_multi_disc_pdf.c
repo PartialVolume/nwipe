@@ -102,7 +102,6 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     char prng_type[50] = ""; /* type of prng, twister, isaac, isaac64 */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
-    char bytes_erased[50] = "";
     char HPA_status_text[50] = "";
     char HPA_size_text[50] = "";
     char errors[50] = "";
@@ -382,7 +381,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text_prng_type( 395, yoffset, PDF_BLACK );
 
         /***********
-         * test
+         * Status of Erasure
          */
         yoffset = yoffset - line_spacing;  // next line
         pdf_add_text_status_of_erasure(
@@ -390,6 +389,15 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
 
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
+
+    /********
+     * Display the appropriate status icon (green tick, red cross, tick with exclamation)
+     */
+
+    // !! WARNING On a multidisc we may not know the status of all the drives until we are on the second page so we will
+    // need to go page and rewrite each page status icon
+    // !! WARNING THINK ABOUT THIS !
+    display_status_icon( PDF_TYPE_SINGLE_DISC );
 
     /*****************************
      * Create the reports filename

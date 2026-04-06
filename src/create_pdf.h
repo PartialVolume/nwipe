@@ -31,6 +31,9 @@
 #define STATUS_ICON_YELLOW_EXCLAMATION 2
 #define STATUS_ICON_RED_CROSS 3
 
+#define PDF_TYPE_SINGLE_DISC 1
+#define PDF_TYPE_MULTI_DISC 2
+
 #define LEFT_MARGIN_TEXT 60
 
 /* Additional colors that supplement the standard colors in pdfgen.h
@@ -83,5 +86,7 @@ void pdf_add_text_bytes_erased( float xoff, float yoff, nwipe_context_t* c );
 void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour );
 
 void pdf_add_text_status_of_erasure( float, float, float, float, float, float, float, nwipe_context_t* c );
+
+void display_status_icon( size_t );
 
 #endif /* CREATE_PDF_H_ */

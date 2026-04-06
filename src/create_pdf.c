@@ -58,7 +58,10 @@ char pdf_footer[MAX_PDF_FOOTER_TEXT_LENGTH];
 char tag_header[MAX_PDF_TAG_LENGTH];
 float height;
 float page_width;
-int status_icon;
+size_t status_icon;  // Relevant for single disc PDF only
+size_t status_icon_green;  // used by multidisc system PDF
+size_t status_icon_yellow;  // used by multidisc system PDF
+size_t status_icon_red;  // used by multidisc system PDF
 
 int nwipe_get_smart_data( nwipe_context_t* c )
 {
@@ -140,6 +143,9 @@ int nwipe_get_smart_data( nwipe_context_t* c )
             snprintf( page_title, sizeof( page_title ), "Page %i - Smart Data", page_number );
             create_header_and_footer( c, page_title );
 
+            /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
+            display_status_icon( PDF_TYPE_SINGLE_DISC );
+
             /* Read the output a line at a time - output it. */
             while( fgets( result, sizeof( result ) - 1, fp ) != NULL )
             {
@@ -197,6 +203,8 @@ int nwipe_get_smart_data( nwipe_context_t* c )
                     /* create the header and footer for the next page */
                     snprintf( page_title, sizeof( page_title ), "Page %i - Smart Data", page_number );
                     create_header_and_footer( c, page_title );
+                    /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
+                    display_status_icon( PDF_TYPE_SINGLE_DISC );
                 }
             }
             set_return_value = 0;
@@ -216,35 +224,6 @@ void create_header_and_footer( nwipe_context_t* c, char* page_title )
      * of the green tick/red icon which is set from the 'status' section below.
      */
     pdf_header_footer_text( c, page_title );
-
-    /**********************************************************
-     * Display the appropriate status icon, top right on page on
-     * most recently added page.
-     */
-    switch( status_icon )
-    {
-        case STATUS_ICON_GREEN_TICK:
-
-            /* Display the green tick icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
-            break;
-
-        case STATUS_ICON_YELLOW_EXCLAMATION:
-
-            /* Display the yellow exclamation icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
-            break;
-
-        case STATUS_ICON_RED_CROSS:
-
-            // Display the red cross in the header
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
-            break;
-
-        default:
-
-            break;
-    }
 }
 
 void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
@@ -526,9 +505,8 @@ void pdf_add_text_status_of_erasure( float text_xoff,
                          PDF_DARK_GREEN,
                          PDF_TRANSPARENT );
 
-        /* Display the green tick icon in the header */
-        pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
         status_icon = STATUS_ICON_GREEN_TICK;  // used later on page 2
+        status_icon_green = TRUE;  // Used later for multidisc system PDF
     }
     else
     {
@@ -540,9 +518,8 @@ void pdf_add_text_status_of_erasure( float text_xoff,
             pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, angle, PDF_YELLOW );
             pdf_add_text( pdf, NULL, "See Warning !", 12, 450, 290, PDF_RED );
 
-            /* Display the yellow exclamation icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
-            status_icon = STATUS_ICON_YELLOW_EXCLAMATION;  // used later on page 2
+            status_icon = STATUS_ICON_YELLOW_EXCLAMATION;  // used later on page 2 for single disk PDF
+            status_icon_yellow = TRUE;  // Used later for multidisc system PDF
         }
         else
         {
@@ -551,20 +528,86 @@ void pdf_add_text_status_of_erasure( float text_xoff,
                 // text shifted left slightly in ellipse due to extra character
                 pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff + 5, text_yoff, angle, PDF_RED );
 
-                // Display the red cross in the header
-                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
-                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
+                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2 for single disk PDF
+                status_icon_red = TRUE;  // Used later for multidisc system PDF
             }
             else
             {
                 pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, PDF_RED );
 
-                // Print the red cross
-                pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
-                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2
+                status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2 for single disk PDF
+                status_icon_red = TRUE;  // Used later for multidisc system PDF
             }
             pdf_add_ellipse(
                 pdf, NULL, ellipse_xoff, ellipse_yoff, ellipse_xradius, ellipse_yradius, 2, PDF_RED, PDF_TRANSPARENT );
         }
+    }
+}
+
+void display_status_icon( size_t pdf_type )
+{
+    /**********************************************************
+     * Display the appropriate status icon, top right of PDF
+     *
+     * The pdf_type represents either single disc or multi-disc
+     * pdf. For a single disc pdf the status icon chosen represents
+     * the status of only that disc, however for a multidisc pdf
+     * the icon chosen should only show a green tick if ALL discs
+     * are wiped without error. If any disc fails the icon MUST show
+     * a failed status (red cross). Individual disc status is noted
+     * next to the specific disc wipe details.
+     *
+     * The data to determine the status is derived from the
+     * pdf_add_text_status_of_erasure() function.
+     *
+     */
+
+    size_t status_icon_local;
+
+    status_icon_local = status_icon;  // Initialised but may be changed by following statements
+
+    if( pdf_type == PDF_TYPE_MULTI_DISC )
+    {
+        if( status_icon_red == TRUE )
+        {
+            status_icon_local = STATUS_ICON_RED_CROSS;
+        }
+        else if( status_icon_yellow == TRUE )
+        {
+            status_icon_local = STATUS_ICON_YELLOW_EXCLAMATION;
+        }
+        else if( status_icon_green == TRUE )
+        {
+            status_icon_local = STATUS_ICON_GREEN_TICK;
+        }
+    }
+    else if( pdf_type == PDF_TYPE_SINGLE_DISC )
+    {
+        status_icon_local = status_icon;
+    }
+
+    switch( status_icon_local )
+    {
+        case STATUS_ICON_GREEN_TICK:
+
+            /* Display the green tick icon in the header */
+            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
+            break;
+
+        case STATUS_ICON_YELLOW_EXCLAMATION:
+
+            /* Display the yellow exclamation icon in the header */
+            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
+            break;
+
+        case STATUS_ICON_RED_CROSS:
+
+            // Display the red cross in the header
+            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
+            break;
+
+        default:
+
+            break;
     }
 }
