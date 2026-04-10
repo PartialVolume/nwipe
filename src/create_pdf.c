@@ -144,7 +144,7 @@ int nwipe_get_smart_data( nwipe_context_t* c )
             create_header_and_footer( c, page_title );
 
             /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
-            display_status_icon( PDF_TYPE_SINGLE_DISC );
+            pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
 
             /* Read the output a line at a time - output it. */
             while( fgets( result, sizeof( result ) - 1, fp ) != NULL )
@@ -204,7 +204,7 @@ int nwipe_get_smart_data( nwipe_context_t* c )
                     snprintf( page_title, sizeof( page_title ), "Page %i - Smart Data", page_number );
                     create_header_and_footer( c, page_title );
                     /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
-                    display_status_icon( PDF_TYPE_SINGLE_DISC );
+                    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
                 }
             }
             set_return_value = 0;
@@ -544,7 +544,7 @@ void pdf_add_text_status_of_erasure( float text_xoff,
     }
 }
 
-void display_status_icon( size_t pdf_type )
+void pdf_display_status_icon( size_t pdf_type )
 {
     /**********************************************************
      * Display the appropriate status icon, top right of PDF
@@ -610,4 +610,48 @@ void display_status_icon( size_t pdf_type )
 
             break;
     }
+}
+
+void pdf_add_text_blanking( float text_size, float xoff, float yoff )
+{
+    /******************************************************
+     * Final blanking pass if selected, none, zeros or ones
+     */
+
+    char blank[10] = ""; /* blanking pass, none, zeros, ones */
+
+    if( nwipe_options.noblank )
+    {
+        strcpy( blank, "None" );
+    }
+    else
+    {
+        strcpy( blank, "Zeros" );
+    }
+    pdf_add_text( pdf, NULL, blank, text_size, xoff, yoff, PDF_BLACK );
+}
+
+void pdf_add_text_verify( float text_size, float xoff, float yoff )
+{
+    /* ***********************************************************************
+     * Create suitable text based on the numeric value of type of verification
+     */
+
+    char verify[20] = ""; /* Verify option text */
+
+    switch( nwipe_options.verify )
+    {
+        case NWIPE_VERIFY_NONE:
+            strcpy( verify, "None" );
+            break;
+
+        case NWIPE_VERIFY_LAST:
+            strcpy( verify, "Last" );
+            break;
+
+        case NWIPE_VERIFY_ALL:
+            strcpy( verify, "All" );
+            break;
+    }
+    pdf_add_text( pdf, NULL, verify, text_size, xoff, yoff, PDF_BLACK );
 }

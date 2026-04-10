@@ -87,6 +87,17 @@ void pdf_add_text_prng_type( float xoff, float yoff, uint32_t colour );
 
 void pdf_add_text_status_of_erasure( float, float, float, float, float, float, float, nwipe_context_t* c );
 
-void display_status_icon( size_t );
+/**
+ * Display the wipe status icon, green tick, red cross, yellow exclamation.
+ * @param flag indicating whether this is for a single disc PDF or a system multidisc PDF.
+ * flag defined by PDF_TYPE_SINGLE_DISC and PDF_TYPE_MULTI_DISC. The icon displayed differs
+ * depending on the type of PDF. A multi disc PDF requires all drives to have been
+ * succesfully erased before a green tick is displayed in the top right corner.
+ */
+void pdf_display_status_icon( size_t );
+
+void pdf_add_text_blanking( float, float, float );
+
+void pdf_add_text_verify( float text_size, float xoff, float yoff );
 
 #endif /* CREATE_PDF_H_ */

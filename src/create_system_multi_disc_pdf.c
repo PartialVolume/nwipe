@@ -381,9 +381,30 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text_prng_type( 395, yoffset, PDF_BLACK );
 
         /***********
+         * Blanking pass
+         */
+        yoffset = yoffset - line_spacing;  // next
+        pdf_add_text( pdf, NULL, "Blanking Pass:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text_blanking( TEXT_SIZE_DATA, 150, yoffset );
+
+        /***********
+         * Verify
+         */
+        pdf_add_text( pdf, NULL, "Verify(Last/All/None):", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        pdf_add_text_verify( TEXT_SIZE_DATA, 450, yoffset );
+
+        /***********
+         * Rounds
+         */
+        yoffset = yoffset - line_spacing;  // next
+
+        /***********
+         * Throughput
+         */
+
+        /***********
          * Status of Erasure
          */
-        yoffset = yoffset - line_spacing;  // next line
         pdf_add_text_status_of_erasure(
             LEFT_MARGIN_TEXT - 12, yoffset + 10, LEFT_MARGIN_TEXT - 15, yoffset + 30, 10, 35, 1.5707, c[i] );
 
@@ -395,9 +416,9 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      */
 
     // !! WARNING On a multidisc we may not know the status of all the drives until we are on the second page so we will
-    // need to go page and rewrite each page status icon
+    // need to display all discs then once we know the overall status then rewrite each page status icon
     // !! WARNING THINK ABOUT THIS !
-    display_status_icon( PDF_TYPE_SINGLE_DISC );
+    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
 
     /*****************************
      * Create the reports filename

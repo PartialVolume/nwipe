@@ -72,8 +72,6 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     nwipe_context_t* c;
     c = ptr;
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
-    char verify[20] = ""; /* Verify option text */
-    char blank[10] = ""; /* blanking pass, none, zeros, ones */
     char rounds[50] = ""; /* rounds ASCII numeric */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
@@ -307,7 +305,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     /********
      * Display the appropriate status icon (green tick, red cross, tick with exclamation)
      */
-    display_status_icon( PDF_TYPE_SINGLE_DISC );
+    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
 
     /********
      * Method
@@ -328,39 +326,17 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     /******************************************************
      * Final blanking pass if selected, none, zeros or ones
      */
-    if( nwipe_options.noblank )
-    {
-        strcpy( blank, "None" );
-    }
-    else
-    {
-        strcpy( blank, "Zeros" );
-    }
     pdf_add_text( pdf, NULL, "Final Pass(Zeros/Ones/None):", 12, 60, 250, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text( pdf, NULL, blank, text_size_data, 230, 250, PDF_BLACK );
+    pdf_add_text_blanking( 12, 230, 250 );
     pdf_set_font( pdf, "Helvetica" );
 
     /* ***********************************************************************
      * Create suitable text based on the numeric value of type of verification
      */
-    switch( nwipe_options.verify )
-    {
-        case NWIPE_VERIFY_NONE:
-            strcpy( verify, "Verify None" );
-            break;
-
-        case NWIPE_VERIFY_LAST:
-            strcpy( verify, "Verify Last" );
-            break;
-
-        case NWIPE_VERIFY_ALL:
-            strcpy( verify, "Verify All" );
-            break;
-    }
     pdf_add_text( pdf, NULL, "Verify Pass(Last/All/None):", 12, 300, 250, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text( pdf, NULL, verify, text_size_data, 450, 250, PDF_BLACK );
+    pdf_add_text_verify( 12, 450, 250 );
     pdf_set_font( pdf, "Helvetica" );
 
     /* ************
