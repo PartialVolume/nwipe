@@ -655,3 +655,23 @@ void pdf_add_text_verify( float text_size, float xoff, float yoff )
     }
     pdf_add_text( pdf, NULL, verify, text_size, xoff, yoff, PDF_BLACK );
 }
+
+void pdf_add_text_rounds( float text_size, float xoff, float yoff, nwipe_context_t* c )
+{
+    /************************************************
+     * rounds - How many times the method is repeated
+     */
+
+    char rounds[50] = ""; /* rounds ASCII numeric */
+
+    if( !strcmp( c->wipe_status_txt, "ERASED" ) )
+    {
+        snprintf( rounds, sizeof( rounds ), "%i/%i", c->round_working, nwipe_options.rounds );
+        pdf_add_text( pdf, NULL, rounds, text_size, xoff, yoff, PDF_DARK_GREEN );
+    }
+    else
+    {
+        snprintf( rounds, sizeof( rounds ), "%i/%i", c->round_working - 1, nwipe_options.rounds );
+        pdf_add_text( pdf, NULL, rounds, text_size, xoff, yoff, PDF_RED );
+    }
+}

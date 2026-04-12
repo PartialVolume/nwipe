@@ -72,7 +72,6 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     nwipe_context_t* c;
     c = ptr;
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
-    char rounds[50] = ""; /* rounds ASCII numeric */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
     char HPA_status_text[50] = "";
@@ -352,16 +351,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      */
     pdf_add_text( pdf, NULL, "Rounds(completed/requested):", 12, 300, 230, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    if( !strcmp( c->wipe_status_txt, "ERASED" ) )
-    {
-        snprintf( rounds, sizeof( rounds ), "%i/%i", c->round_working, nwipe_options.rounds );
-        pdf_add_text( pdf, NULL, rounds, text_size_data, 470, 230, PDF_DARK_GREEN );
-    }
-    else
-    {
-        snprintf( rounds, sizeof( rounds ), "%i/%i", c->round_working - 1, nwipe_options.rounds );
-        pdf_add_text( pdf, NULL, rounds, text_size_data, 470, 230, PDF_RED );
-    }
+    pdf_add_text_rounds( 12, 470, 230, c );
     pdf_set_font( pdf, "Helvetica" );
 
     /*******************
@@ -369,7 +359,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      */
     pdf_add_text( pdf, NULL, "HPA/DCO:", 12, 60, 210, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 155, 210, PDF_BLACK );
+    // pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 155, 210, PDF_BLACK );
     pdf_set_font( pdf, "Helvetica" );
     pdf_add_text( pdf, NULL, "HPA/DCO Size:", 12, 300, 210, PDF_GRAY );
 

@@ -96,10 +96,6 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     //    char serial_header[30] = ""; /* Serial number text in the header */
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
     //    char barcode[100] = ""; /* Contents of the barcode, i.e model:serial */
-    char verify[20] = ""; /* Verify option text */
-    char blank[10] = ""; /* blanking pass, none, zeros, ones */
-    char rounds[50] = ""; /* rounds ASCII numeric */
-    char prng_type[50] = ""; /* type of prng, twister, isaac, isaac64 */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
     char HPA_status_text[50] = "";
@@ -107,9 +103,11 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     char errors[50] = "";
     char throughput_txt[50] = "";
     char bytes_percent_str[7] = "";
+    char page_title[50];
 
     size_t yoffset;
     size_t line_spacing;
+    size_t page_number;
 
     //    int status_icon;
 
@@ -257,12 +255,24 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
 
     yoffset = 410;  // start y offset of disc details
     line_spacing = 10;  // vertical distance between lines
+    page_number = 1;
 
     /*************************************
      * For each disc wiped, print an entry
      */
     for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
     {
+        // create a new page if we have already reached the bottom of the page.
+        if( yoffset < 210 )
+        {
+            yoffset = 630;
+            page_number++;
+            page = pdf_append_page( pdf );
+
+            /* Create the header and footer for page 2 */
+            snprintf( page_title, sizeof( page_title ), "Page %zu - Erasure Status", page_number );
+            create_header_and_footer( c[i], page_title );
+        }
         if( c[i]->device_serial_no[0] == 0 )
         {
             snprintf( c[i]->device_serial_no, sizeof( c[i]->device_serial_no ), "Unknown" );
@@ -393,20 +403,32 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text( pdf, NULL, "Verify(Last/All/None):", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         pdf_add_text_verify( TEXT_SIZE_DATA, 450, yoffset );
 
+        /**********
+         * HPA, DCO status
+         */
+        yoffset = yoffset - line_spacing;  // next
+        pdf_add_text( pdf, NULL, "HPA/DCO:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+
+        /**********
+         * HPA, DCO Size
+         */
+        pdf_add_text( pdf, NULL, "HPA/DCO Size:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+
         /***********
          * Rounds
          */
         yoffset = yoffset - line_spacing;  // next
+        pdf_add_text( pdf, NULL, "Rounds(completed/requested):", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text_rounds( TEXT_SIZE_DATA, 230, yoffset, c[i] );
 
-        /***********
-         * Throughput
-         */
+        // temp debug
+        nwipe_log( NWIPE_LOG_INFO, " yoffset=%i", yoffset );
 
         /***********
          * Status of Erasure
          */
         pdf_add_text_status_of_erasure(
-            LEFT_MARGIN_TEXT - 12, yoffset + 10, LEFT_MARGIN_TEXT - 15, yoffset + 30, 10, 35, 1.5707, c[i] );
+            LEFT_MARGIN_TEXT - 12, yoffset + 20, LEFT_MARGIN_TEXT - 15, yoffset + 40, 10, 35, 1.5707, c[i] );
 
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
@@ -418,7 +440,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     // !! WARNING On a multidisc we may not know the status of all the drives until we are on the second page so we will
     // need to display all discs then once we know the overall status then rewrite each page status icon
     // !! WARNING THINK ABOUT THIS !
-    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
+    pdf_display_status_icon( PDF_TYPE_MULTI_DISC );
 
     /*****************************
      * Create the reports filename

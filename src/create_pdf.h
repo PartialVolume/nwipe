@@ -98,6 +98,8 @@ void pdf_display_status_icon( size_t );
 
 void pdf_add_text_blanking( float, float, float );
 
-void pdf_add_text_verify( float text_size, float xoff, float yoff );
+void pdf_add_text_verify( float, float, float );
+
+void pdf_add_text_rounds( float, float, float, nwipe_context_t* );
 
 #endif /* CREATE_PDF_H_ */
