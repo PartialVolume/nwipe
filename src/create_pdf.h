@@ -54,7 +54,7 @@
  */
 int create_single_disc_pdf( nwipe_context_t* ptr );
 
-int nwipe_get_smart_data( nwipe_context_t* );
+int nwipe_get_smart_data( size_t*, nwipe_context_t* );
 
 void create_header_and_footer( nwipe_context_t*, char* );
 
@@ -101,5 +101,9 @@ void pdf_add_text_blanking( float, float, float );
 void pdf_add_text_verify( float, float, float );
 
 void pdf_add_text_rounds( float, float, float, nwipe_context_t* );
+
+void pdf_add_text_hpa_size( float, float, float, nwipe_context_t* );
+
+void pdf_add_text_hpa_status( float, float, float, nwipe_context_t* );
 
 #endif /* CREATE_PDF_H_ */

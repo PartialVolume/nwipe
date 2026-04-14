@@ -63,7 +63,7 @@ size_t status_icon_green;  // used by multidisc system PDF
 size_t status_icon_yellow;  // used by multidisc system PDF
 size_t status_icon_red;  // used by multidisc system PDF
 
-int nwipe_get_smart_data( nwipe_context_t* c )
+int nwipe_get_smart_data( size_t* page_number, nwipe_context_t* c )
 {
     FILE* fp;
 
@@ -83,7 +83,6 @@ int nwipe_get_smart_data( nwipe_context_t* c )
     int idx, idx2, idx3;
     int x, y;
     int set_return_value;
-    int page_number;
 
     final_cmd_smartctl[0] = 0;
 
@@ -133,14 +132,14 @@ int nwipe_get_smart_data( nwipe_context_t* c )
         {
             x = 50;  // left side of page
             y = 630;  // top row of page
-            page_number = 2;
+            ( *page_number )++;
 
-            /* Create Page 2 of the report. This shows the drives smart data
+            /* Create the next page of the report. This shows the drives smart data
              */
             page = pdf_append_page( pdf );
 
             /* Create the header and footer for page 2, the start of the smart data */
-            snprintf( page_title, sizeof( page_title ), "Page %i - Smart Data", page_number );
+            snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
             create_header_and_footer( c, page_title );
 
             /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
@@ -201,7 +200,7 @@ int nwipe_get_smart_data( nwipe_context_t* c )
                     y = 630;
 
                     /* create the header and footer for the next page */
-                    snprintf( page_title, sizeof( page_title ), "Page %i - Smart Data", page_number );
+                    snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
                     create_header_and_footer( c, page_title );
                     /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
                     pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
@@ -673,5 +672,91 @@ void pdf_add_text_rounds( float text_size, float xoff, float yoff, nwipe_context
     {
         snprintf( rounds, sizeof( rounds ), "%i/%i", c->round_working - 1, nwipe_options.rounds );
         pdf_add_text( pdf, NULL, rounds, text_size, xoff, yoff, PDF_RED );
+    }
+}
+
+void pdf_add_text_hpa_size( float text_size, float xoff, float yoff, nwipe_context_t* c )
+{
+    /*******************
+     * Populate HPA size
+     */
+    char HPA_size_text[50] = "";
+
+    if( c->HPA_status == HPA_ENABLED )
+    {
+        snprintf( HPA_size_text, sizeof( HPA_size_text ), "%lli sectors", c->HPA_sectors );
+        pdf_add_text( pdf, NULL, HPA_size_text, text_size, xoff, yoff, PDF_RED );
+    }
+    else
+    {
+        if( c->HPA_status == HPA_DISABLED )
+        {
+            snprintf( HPA_size_text, sizeof( HPA_size_text ), "No hidden sectors" );
+            pdf_add_text( pdf, NULL, HPA_size_text, text_size, xoff, yoff, PDF_DARK_GREEN );
+        }
+        else
+        {
+            if( c->HPA_status == HPA_NOT_APPLICABLE )
+            {
+                snprintf( HPA_size_text, sizeof( HPA_size_text ), "Not Applicable" );
+                pdf_add_text( pdf, NULL, HPA_size_text, text_size, xoff, yoff, PDF_DARK_GREEN );
+            }
+            else
+            {
+                if( c->HPA_status == HPA_UNKNOWN )
+                {
+                    snprintf( HPA_size_text, sizeof( HPA_size_text ), "Unknown" );
+                    pdf_add_text( pdf, NULL, HPA_size_text, text_size, xoff, yoff, PDF_RED );
+                }
+            }
+        }
+    }
+}
+
+void pdf_add_text_hpa_status( float text_size, float xoff, float yoff, nwipe_context_t* c )
+{
+    /*********************
+     * Populate HPA status (and size if not applicable, NVMe and VIRT)
+     */
+
+    char HPA_status_text[50] = "";
+
+    if( c->device_type == NWIPE_DEVICE_NVME || c->device_type == NWIPE_DEVICE_VIRT
+        || c->HPA_status == HPA_NOT_APPLICABLE )
+    {
+        snprintf( HPA_status_text, sizeof( HPA_status_text ), "Not applicable" );
+        pdf_add_text( pdf, NULL, HPA_status_text, text_size, xoff, yoff, PDF_DARK_GREEN );
+    }
+    else
+    {
+        if( c->HPA_status == HPA_ENABLED )
+        {
+            snprintf( HPA_status_text, sizeof( HPA_status_text ), "Hidden sectors found!" );
+            pdf_add_text( pdf, NULL, HPA_status_text, text_size, xoff, yoff, PDF_RED );
+        }
+        else
+        {
+            if( c->HPA_status == HPA_DISABLED )
+            {
+                snprintf( HPA_status_text, sizeof( HPA_status_text ), "No hidden sectors" );
+                pdf_add_text( pdf, NULL, HPA_status_text, text_size, xoff, yoff, PDF_DARK_GREEN );
+            }
+            else
+            {
+                if( c->HPA_status == HPA_UNKNOWN )
+                {
+                    snprintf( HPA_status_text, sizeof( HPA_status_text ), "Unknown" );
+                    pdf_add_text( pdf, NULL, HPA_status_text, text_size, xoff, yoff, PDF_RED );
+                }
+                else
+                {
+                    if( c->HPA_status == HPA_NOT_SUPPORTED_BY_DRIVE )
+                    {
+                        snprintf( HPA_status_text, sizeof( HPA_status_text ), "No hidden sectors **DDNSHDA" );
+                        pdf_add_text( pdf, NULL, HPA_status_text, text_size, xoff, yoff, PDF_DARK_GREEN );
+                    }
+                }
+            }
+        }
     }
 }

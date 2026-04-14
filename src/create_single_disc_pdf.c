@@ -74,10 +74,10 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
-    char HPA_status_text[50] = "";
-    char HPA_size_text[50] = "";
     char errors[50] = "";
     char throughput_txt[50] = "";
+
+    size_t page_number = 1;
 
     struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
                              .producer = "https://github.com/martijnvanbrummelen/nwipe",
@@ -327,15 +327,15 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      */
     pdf_add_text( pdf, NULL, "Final Pass(Zeros/Ones/None):", 12, 60, 250, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text_blanking( 12, 230, 250 );
+    pdf_add_text_blanking( text_size_data, 230, 250 );
     pdf_set_font( pdf, "Helvetica" );
 
     /* ***********************************************************************
-     * Create suitable text based on the numeric value of type of verification
+     * Verification
      */
     pdf_add_text( pdf, NULL, "Verify Pass(Last/All/None):", 12, 300, 250, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text_verify( 12, 450, 250 );
+    pdf_add_text_verify( text_size_data, 450, 250 );
     pdf_set_font( pdf, "Helvetica" );
 
     /* ************
@@ -351,106 +351,28 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      */
     pdf_add_text( pdf, NULL, "Rounds(completed/requested):", 12, 300, 230, PDF_GRAY );
     pdf_set_font( pdf, "Helvetica-Bold" );
-    pdf_add_text_rounds( 12, 470, 230, c );
+    pdf_add_text_rounds( text_size_data, 470, 230, c );
     pdf_set_font( pdf, "Helvetica" );
 
     /*******************
      * HPA, DCO - LABELS
      */
     pdf_add_text( pdf, NULL, "HPA/DCO:", 12, 60, 210, PDF_GRAY );
-    pdf_set_font( pdf, "Helvetica-Bold" );
-    // pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 155, 210, PDF_BLACK );
-    pdf_set_font( pdf, "Helvetica" );
     pdf_add_text( pdf, NULL, "HPA/DCO Size:", 12, 300, 210, PDF_GRAY );
 
     /*******************
      * Populate HPA size
      */
-
     pdf_set_font( pdf, "Helvetica-Bold" );
-    if( c->HPA_status == HPA_ENABLED )
-    {
-        snprintf( HPA_size_text, sizeof( HPA_size_text ), "%lli sectors", c->HPA_sectors );
-        pdf_add_text( pdf, NULL, HPA_size_text, text_size_data, 390, 210, PDF_RED );
-    }
-    else
-    {
-        if( c->HPA_status == HPA_DISABLED )
-        {
-            snprintf( HPA_size_text, sizeof( HPA_size_text ), "No hidden sectors" );
-            pdf_add_text( pdf, NULL, HPA_size_text, text_size_data, 390, 210, PDF_DARK_GREEN );
-        }
-        else
-        {
-            if( c->HPA_status == HPA_NOT_APPLICABLE )
-            {
-                snprintf( HPA_size_text, sizeof( HPA_size_text ), "Not Applicable" );
-                pdf_add_text( pdf, NULL, HPA_size_text, text_size_data, 390, 210, PDF_DARK_GREEN );
-            }
-            else
-            {
-                if( c->HPA_status == HPA_UNKNOWN )
-                {
-                    snprintf( HPA_size_text, sizeof( HPA_size_text ), "Unknown" );
-                    pdf_add_text( pdf, NULL, HPA_size_text, text_size_data, 390, 210, PDF_RED );
-                }
-            }
-        }
-    }
-
+    pdf_add_text_hpa_size( text_size_data, 390, 210, c );
     pdf_set_font( pdf, "Helvetica" );
 
     /*********************
      * Populate HPA status (and size if not applicable, NVMe and VIRT)
      */
-    if( c->device_type == NWIPE_DEVICE_NVME || c->device_type == NWIPE_DEVICE_VIRT
-        || c->HPA_status == HPA_NOT_APPLICABLE )
-    {
-        snprintf( HPA_status_text, sizeof( HPA_status_text ), "Not applicable" );
-        pdf_set_font( pdf, "Helvetica-Bold" );
-        pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 130, 210, PDF_DARK_GREEN );
-        pdf_set_font( pdf, "Helvetica" );
-    }
-    else
-    {
-        if( c->HPA_status == HPA_ENABLED )
-        {
-            snprintf( HPA_status_text, sizeof( HPA_status_text ), "Hidden sectors found!" );
-            pdf_set_font( pdf, "Helvetica-Bold" );
-            pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 130, 210, PDF_RED );
-            pdf_set_font( pdf, "Helvetica" );
-        }
-        else
-        {
-            if( c->HPA_status == HPA_DISABLED )
-            {
-                snprintf( HPA_status_text, sizeof( HPA_status_text ), "No hidden sectors" );
-                pdf_set_font( pdf, "Helvetica-Bold" );
-                pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 130, 210, PDF_DARK_GREEN );
-                pdf_set_font( pdf, "Helvetica" );
-            }
-            else
-            {
-                if( c->HPA_status == HPA_UNKNOWN )
-                {
-                    snprintf( HPA_status_text, sizeof( HPA_status_text ), "Unknown" );
-                    pdf_set_font( pdf, "Helvetica-Bold" );
-                    pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 130, 210, PDF_RED );
-                    pdf_set_font( pdf, "Helvetica" );
-                }
-                else
-                {
-                    if( c->HPA_status == HPA_NOT_SUPPORTED_BY_DRIVE )
-                    {
-                        snprintf( HPA_status_text, sizeof( HPA_status_text ), "No hidden sectors **DDNSHDA" );
-                        pdf_set_font( pdf, "Helvetica-Bold" );
-                        pdf_add_text( pdf, NULL, HPA_status_text, text_size_data, 130, 210, PDF_DARK_GREEN );
-                        pdf_set_font( pdf, "Helvetica" );
-                    }
-                }
-            }
-        }
-    }
+    pdf_set_font( pdf, "Helvetica-Bold" );
+    pdf_add_text_hpa_status( text_size_data, 130, 210, c );
+    pdf_set_font( pdf, "Helvetica" );
 
     /************
      * Throughput
@@ -551,7 +473,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     /***************************************
      * Populate page 2 and 3 with smart data
      */
-    nwipe_get_smart_data( c );
+    nwipe_get_smart_data( &page_number, c );
 
     /*****************************
      * Create the reports filename

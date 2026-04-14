@@ -408,11 +408,13 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
          */
         yoffset = yoffset - line_spacing;  // next
         pdf_add_text( pdf, NULL, "HPA/DCO:", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
+        pdf_add_text_hpa_status( TEXT_SIZE_DATA, 150, yoffset, c[i] );
 
-        /**********
-         * HPA, DCO Size
+        /************************
+         * Populate HPA, DCO size
          */
         pdf_add_text( pdf, NULL, "HPA/DCO Size:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
+        pdf_add_text_hpa_size( TEXT_SIZE_DATA, 390, yoffset, c[i] );
 
         /***********
          * Rounds
@@ -420,9 +422,6 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         yoffset = yoffset - line_spacing;  // next
         pdf_add_text( pdf, NULL, "Rounds(completed/requested):", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
         pdf_add_text_rounds( TEXT_SIZE_DATA, 230, yoffset, c[i] );
-
-        // temp debug
-        nwipe_log( NWIPE_LOG_INFO, " yoffset=%i", yoffset );
 
         /***********
          * Status of Erasure
@@ -441,6 +440,14 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     // need to display all discs then once we know the overall status then rewrite each page status icon
     // !! WARNING THINK ABOUT THIS !
     pdf_display_status_icon( PDF_TYPE_MULTI_DISC );
+
+    /***************************************
+     * Populate subsequent pages with smart data for each drive
+     */
+    for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
+    {
+        nwipe_get_smart_data( &page_number, c[i] );
+    }
 
     /*****************************
      * Create the reports filename
