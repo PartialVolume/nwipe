@@ -304,7 +304,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     /********
      * Display the appropriate status icon (green tick, red cross, tick with exclamation)
      */
-    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
+    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC, NULL );
 
     /********
      * Method
@@ -471,9 +471,9 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     pdf_set_font( pdf, "Helvetica" );
 
     /***************************************
-     * Populate page 2 and 3 with smart data
+     * Populate subsequent pages with smart data
      */
-    nwipe_get_smart_data( &page_number, c );
+    nwipe_get_smart_data( PDF_TYPE_SINGLE_DISC, &page_number, c );
 
     /*****************************
      * Create the reports filename

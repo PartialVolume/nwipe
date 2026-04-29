@@ -60,6 +60,10 @@ extern char tag_header[MAX_PDF_TAG_LENGTH];
 extern float height;
 extern float page_width;
 extern int status_icon;
+extern struct pdf_object** pdf_page_array;
+
+void append_page_array( struct pdf_object***, struct pdf_object* );
+void pdf_display_status_icon( size_t, void* );
 
 int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
 {
@@ -92,27 +96,16 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     size_t i;  // general index
     uint32_t text_color_size_apparent;  // local use of color
 
-    //    char model_header[50] = ""; /* Model text in the header */
-    //    char serial_header[30] = ""; /* Serial number text in the header */
     char device_size[100] = ""; /* Device size in the form xMB (xxxx bytes) */
-    //    char barcode[100] = ""; /* Contents of the barcode, i.e model:serial */
     char start_time_text[50] = "";
     char end_time_text[50] = "";
-    char HPA_status_text[50] = "";
-    char HPA_size_text[50] = "";
     char errors[50] = "";
     char throughput_txt[50] = "";
-    char bytes_percent_str[7] = "";
     char page_title[50];
 
     size_t yoffset;
     size_t line_spacing;
     size_t page_number;
-
-    //    int status_icon;
-
-    //    float height;
-    //    float page_width;
 
     struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
                              .producer = "https://github.com/martijnvanbrummelen/nwipe",
@@ -147,6 +140,13 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
 
     /* Obtain page page_width */
     page_width = pdf_page_width( page_1 );
+
+    /* create a single element array for the pointers to each page object,
+     * this array will be expanded for each new page pointer added */
+    pdf_page_array = malloc( sizeof( struct pdf_object* ) );
+
+    /* Save the pointer for the first page */
+    pdf_page_array[0] = page_1;
 
     /*********************************************************************
      * Create header and footer on page 1, with the exception of the green
@@ -267,7 +267,14 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         {
             yoffset = 630;
             page_number++;
-            page = pdf_append_page( pdf );
+
+            /* create a new page and save it's page pointer to the page index */
+            page = pdf_append_page_and_update_index( pdf, page_number );
+            if( page == NULL )
+            {
+                nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", page_number );
+                return -1;
+            }
 
             /* Create the header and footer for page 2 */
             snprintf( page_title, sizeof( page_title ), "Page %zu - Erasure Status", page_number );
@@ -432,21 +439,23 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
 
-    /********
-     * Display the appropriate status icon (green tick, red cross, tick with exclamation)
-     */
-
-    // !! WARNING On a multidisc we may not know the status of all the drives until we are on the second page so we will
-    // need to display all discs then once we know the overall status then rewrite each page status icon
-    // !! WARNING THINK ABOUT THIS !
-    pdf_display_status_icon( PDF_TYPE_MULTI_DISC );
-
     /***************************************
      * Populate subsequent pages with smart data for each drive
      */
     for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
     {
-        nwipe_get_smart_data( &page_number, c[i] );
+        nwipe_get_smart_data( PDF_TYPE_MULTI_DISC, &page_number, c[i] );
+    }
+
+    /************************************************************************************
+     * Display the appropriate status icon (green tick, red cross, tick with exclamation)
+     * On a multidisc pdf we may not know the status of all the drives until we
+     * are on the second page so we will need to create all the pages and process
+     * all discs then once we know the overall status then write the status icon to all pages.
+     */
+    for( i = 0; i < page_number; i++ )
+    {
+        pdf_display_status_icon( PDF_TYPE_MULTI_DISC, pdf_page_array[i] );
     }
 
     /*****************************
@@ -457,7 +466,11 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      */
     char PDF_filename[FILENAME_MAX];  // The filename of the PDF certificate/report.
     replace_non_alphanumeric( end_time_text, '-' );
-    snprintf( PDF_filename, sizeof( PDF_filename ), "nwipe_report_system.pdf" );
+    snprintf( PDF_filename,
+              sizeof( PDF_filename ),
+              "%s/nwipe_system_report_%s.pdf",
+              nwipe_options.PDFreportpath,
+              end_time_text );
 
     pdf_save( pdf, PDF_filename );
     pdf_destroy( pdf );

@@ -49,6 +49,7 @@
 
 struct pdf_doc* pdf;
 struct pdf_object* page;
+struct pdf_object** pdf_page_array;
 
 char model_header[MODEL_HEADER_LENGTH] = ""; /* Model text in the header */
 char serial_header[SERIAL_HEADER_LENGTH] = ""; /* Serial number text in the header */
@@ -59,12 +60,14 @@ char tag_header[MAX_PDF_TAG_LENGTH];
 float height;
 float page_width;
 size_t status_icon;  // Relevant for single disc PDF only
-size_t status_icon_green;  // used by multidisc system PDF
-size_t status_icon_yellow;  // used by multidisc system PDF
-size_t status_icon_red;  // used by multidisc system PDF
+size_t status_icon_green = FALSE;  // used by multidisc system PDF
+size_t status_icon_yellow = FALSE;  // used by multidisc system PDF
+size_t status_icon_red = FALSE;  // used by multidisc system PDF
 
-int nwipe_get_smart_data( size_t* page_number, nwipe_context_t* c )
+int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t* c )
 {
+    extern struct pdf_object** pdf_page_array;
+
     FILE* fp;
 
     char* pdata;
@@ -136,14 +139,22 @@ int nwipe_get_smart_data( size_t* page_number, nwipe_context_t* c )
 
             /* Create the next page of the report. This shows the drives smart data
              */
-            page = pdf_append_page( pdf );
+            page = pdf_append_page_and_update_index( pdf, *page_number );
+            if( page == NULL )
+            {
+                nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", page_number );
+                return -1;
+            }
 
             /* Create the header and footer for page 2, the start of the smart data */
             snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
             create_header_and_footer( c, page_title );
 
             /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
-            pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
+            if( pdf_type == PDF_TYPE_SINGLE_DISC )
+            {
+                pdf_display_status_icon( PDF_TYPE_SINGLE_DISC, NULL );
+            }
 
             /* Read the output a line at a time - output it. */
             while( fgets( result, sizeof( result ) - 1, fp ) != NULL )
@@ -203,7 +214,7 @@ int nwipe_get_smart_data( size_t* page_number, nwipe_context_t* c )
                     snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
                     create_header_and_footer( c, page_title );
                     /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
-                    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC );
+                    pdf_display_status_icon( PDF_TYPE_SINGLE_DISC, NULL );
                 }
             }
             set_return_value = 0;
@@ -543,7 +554,7 @@ void pdf_add_text_status_of_erasure( float text_xoff,
     }
 }
 
-void pdf_display_status_icon( size_t pdf_type )
+void pdf_display_status_icon( size_t pdf_type, void* pp )
 {
     /**********************************************************
      * Display the appropriate status icon, top right of PDF
@@ -562,11 +573,17 @@ void pdf_display_status_icon( size_t pdf_type )
      */
 
     size_t status_icon_local;
+    void* page_local;
 
     status_icon_local = status_icon;  // Initialised but may be changed by following statements
 
     if( pdf_type == PDF_TYPE_MULTI_DISC )
     {
+        page_local = pp;
+
+        /* On the system PDF the status icon on every page must represent a failure or warning
+         * icon if ANY drives failed. It's only a green tick if all drives wiped successfully.'
+         */
         if( status_icon_red == TRUE )
         {
             status_icon_local = STATUS_ICON_RED_CROSS;
@@ -582,6 +599,7 @@ void pdf_display_status_icon( size_t pdf_type )
     }
     else if( pdf_type == PDF_TYPE_SINGLE_DISC )
     {
+        page_local = NULL;
         status_icon_local = status_icon;
     }
 
@@ -590,19 +608,19 @@ void pdf_display_status_icon( size_t pdf_type )
         case STATUS_ICON_GREEN_TICK:
 
             /* Display the green tick icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
+            pdf_add_image_data( pdf, page_local, 450, 665, 100, 100, bin2c_te_jpg, 54896 );
             break;
 
         case STATUS_ICON_YELLOW_EXCLAMATION:
 
             /* Display the yellow exclamation icon in the header */
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
+            pdf_add_image_data( pdf, page_local, 450, 665, 100, 100, bin2c_nwipe_exclamation_jpg, 65791 );
             break;
 
         case STATUS_ICON_RED_CROSS:
 
             // Display the red cross in the header
-            pdf_add_image_data( pdf, NULL, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
+            pdf_add_image_data( pdf, page_local, 450, 665, 100, 100, bin2c_redcross_jpg, 60331 );
             break;
 
         default:
@@ -759,4 +777,34 @@ void pdf_add_text_hpa_status( float text_size, float xoff, float yoff, nwipe_con
             }
         }
     }
+}
+
+struct pdf_object* pdf_append_page_and_update_index( void* pdf, size_t page_number )
+{
+    /* We append a new PDF page here and update the page index.
+     *
+     * The page index, which is an array of pointers to each PDF page is used to
+     * write the status icon to each page after all disc info has been written
+     * to the pages including smart data. After all discs are processed and we
+     * know whether each individual disc was erased or failed then we can write
+     * the appropriate status icon to every page on a multidisc system pdf.
+     */
+    struct pdf_object* page;
+
+    page = pdf_append_page( pdf );
+
+    /* expand page array size by one pointer */
+    struct pdf_object** temp = realloc( pdf_page_array, page_number * sizeof( struct pdf_object* ) );
+
+    if( temp == NULL )
+    {
+        fprintf( stderr, "Memory allocation failed!\n" );
+        return NULL;
+    }
+
+    pdf_page_array = temp;
+
+    /* Append the pdf page pointer to the array */
+    pdf_page_array[page_number - 1] = page;
+    return page;
 }
