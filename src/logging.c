@@ -2,6 +2,7 @@
  *  logging.c:  Logging facilities for nwipe.
  *
  *  Copyright Darik Horn <dajhorn-dban@vanadac.com>.
+ *            @PartialVolume <shredos_eraser@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify it under
  *  the terms of the GNU General Public License as published by the Free Software

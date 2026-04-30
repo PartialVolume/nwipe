@@ -337,7 +337,7 @@ void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c )
     if( c->device_type == NWIPE_DEVICE_NVME || c->device_type == NWIPE_DEVICE_VIRT
         || c->HPA_status == HPA_NOT_APPLICABLE )
     {
-        snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c->device_size_text, c->device_size );
+        snprintf( device_size, sizeof( device_size ), "%s,%llib", c->device_size_text, c->device_size );
         pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_DARK_GREEN );
     }
     else
@@ -350,7 +350,7 @@ void pdf_add_text_size_real( float xoff, float yoff, nwipe_context_t* c )
             /* displays the real max size of the disc from the DCO displayed in Green */
             snprintf( device_size,
                       sizeof( device_size ),
-                      "%s, %lli bytes",
+                      "%s,%llib",
                       c->Calculated_real_max_size_in_bytes_text,
                       c->Calculated_real_max_size_in_bytes );
             pdf_add_text( pdf, NULL, device_size, text_size_data, xoff, yoff, PDF_DARK_GREEN );
@@ -543,7 +543,7 @@ void pdf_add_text_status_of_erasure( float text_xoff,
             }
             else
             {
-                pdf_add_text( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, PDF_RED );
+                pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, angle, PDF_RED );
 
                 status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2 for single disk PDF
                 status_icon_red = TRUE;  // Used later for multidisc system PDF
@@ -794,7 +794,7 @@ struct pdf_object* pdf_append_page_and_update_index( void* pdf, size_t page_numb
     page = pdf_append_page( pdf );
 
     /* expand page array size by one pointer */
-    struct pdf_object** temp = realloc( pdf_page_array, page_number * sizeof( struct pdf_object* ) );
+    struct pdf_object** temp = realloc( pdf_page_array, ( page_number + 1 ) * sizeof( struct pdf_object* ) );
 
     if( temp == NULL )
     {

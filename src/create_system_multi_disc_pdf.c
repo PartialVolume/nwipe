@@ -260,7 +260,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     /*************************************
      * For each disc wiped, print an entry
      */
-    for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
+    for( i = 0; i < nwipe_misc_thread_data->nwipe_selected; i++ )
     {
         // create a new page if we have already reached the bottom of the page.
         if( yoffset < 210 )
@@ -293,14 +293,14 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text( pdf, NULL, c[i]->device_model, TEXT_SIZE_DATA, 90, yoffset, PDF_DARK_GREEN );
         pdf_add_text( pdf, NULL, "S/N:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         pdf_add_text( pdf, NULL, c[i]->device_serial_no, TEXT_SIZE_DATA, 330, yoffset, PDF_DARK_GREEN );
-        snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
+        snprintf( device_size, sizeof( device_size ), "%s,%llib", c[i]->device_size_text, c[i]->device_size );
 
         /************
          * Size (apparent)
          */
         yoffset = yoffset - line_spacing;  // next line
         pdf_add_text( pdf, NULL, "Size(Apparent): ", TEXT_SIZE_DATA, LEFT_MARGIN_TEXT, yoffset, PDF_GRAY );
-        snprintf( device_size, sizeof( device_size ), "%s, %lli bytes", c[i]->device_size_text, c[i]->device_size );
+        snprintf( device_size, sizeof( device_size ), "%s,%llib", c[i]->device_size_text, c[i]->device_size );
         text_color_size_apparent =
             determine_color_for_size_apparent( c[i] );  // RED hidden sectors detected, GREEN actual size
         pdf_add_text( pdf, NULL, device_size, TEXT_SIZE_DATA, 150, yoffset, text_color_size_apparent );
@@ -382,7 +382,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
          */
         pdf_add_text( pdf, NULL, "Throughput:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         snprintf( throughput_txt, sizeof( throughput_txt ), "%s/sec", c[i]->throughput_txt );
-        pdf_add_text( pdf, NULL, throughput_txt, TEXT_SIZE_DATA, 350, yoffset, PDF_BLACK );
+        pdf_add_text( pdf, NULL, throughput_txt, TEXT_SIZE_DATA, 360, yoffset, PDF_BLACK );
 
         /********
          * Method
@@ -442,7 +442,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     /***************************************
      * Populate subsequent pages with smart data for each drive
      */
-    for( i = 0; i < nwipe_misc_thread_data->nwipe_enumerated; i++ )
+    for( i = 0; i < nwipe_misc_thread_data->nwipe_selected; i++ )
     {
         nwipe_get_smart_data( PDF_TYPE_MULTI_DISC, &page_number, c[i] );
     }
