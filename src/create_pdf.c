@@ -206,8 +206,13 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
                 if( y < 60 )
                 {
                     /* Append an extra page */
-                    page = pdf_append_page( pdf );
                     ( *page_number )++;
+                    page = pdf_append_page_and_update_index( pdf, *page_number );
+                    if( page == NULL )
+                    {
+                        nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", *page_number );
+                        return -1;
+                    }
                     y = 630;
 
                     /* create the header and footer for the next page */
@@ -536,6 +541,7 @@ void pdf_add_text_status_of_erasure( float text_xoff,
             {
                 /* Re:angle == 0 ? text_xoff + 5 : text_xoff. Required as the text needs to be
                  * shifted left slightly in ellipse due to extra character for 0 degree angle ellipse only */
+
                 pdf_add_text_rotate( pdf,
                                      NULL,
                                      c->wipe_status_txt,

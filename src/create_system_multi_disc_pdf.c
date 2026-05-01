@@ -106,6 +106,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     size_t yoffset;
     size_t line_spacing;
     size_t page_number;
+    int result;
 
     struct pdf_info info = { .creator = "https://github.com/PartialVolume/shredos.x86_64",
                              .producer = "https://github.com/martijnvanbrummelen/nwipe",
@@ -445,6 +446,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
             pdf_add_text( pdf, NULL, "See Warning !", TEXT_SIZE_DATA, 300, yoffset, PDF_RED );
         }
 
+
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
 
@@ -453,7 +455,13 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      */
     for( i = 0; i < nwipe_misc_thread_data->nwipe_selected; i++ )
     {
-        nwipe_get_smart_data( PDF_TYPE_MULTI_DISC, &page_number, c[i] );
+        result = nwipe_get_smart_data( PDF_TYPE_MULTI_DISC, &page_number, c[i] );
+        if( result != 0 )
+        {
+            // fatal error, don't bother trying to save the file'
+            nwipe_log( NWIPE_LOG_ERROR, "Function nwipe_get_smart_data() returned an error %u", result );
+            goto cleanup;
+        }
     }
 
     /************************************************************************************
@@ -487,8 +495,9 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
     pdf_save( pdf, PDF_filename );
 
     /**********************
-     * Clean up
+     * Clean up and free memory
      */
+    cleanup:
     pdf_destroy( pdf );
     free( pdf_page_array );
     return 0;
