@@ -301,6 +301,13 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
     pdf_add_text_status_of_erasure( 365, 290, 390, 295, 45, 10, 0, c );
     pdf_set_font( pdf, "Helvetica" );
 
+    /* ****************
+     * Display warning if hidden sectors found or if HPA/DCO status cannot be determined
+     */
+    if( !strcmp( c->wipe_status_txt, "ERASED" ) && ( c->HPA_status == HPA_ENABLED || c->HPA_status == HPA_UNKNOWN ) )
+    {
+        pdf_add_text( pdf, NULL, "See Warning !", 12, 450, 290, PDF_RED );
+    }
     /********
      * Display the appropriate status icon (green tick, red cross, tick with exclamation)
      */

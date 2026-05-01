@@ -142,7 +142,7 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
             page = pdf_append_page_and_update_index( pdf, *page_number );
             if( page == NULL )
             {
-                nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", page_number );
+                nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", *page_number );
                 return -1;
             }
 
@@ -207,7 +207,7 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
                 {
                     /* Append an extra page */
                     page = pdf_append_page( pdf );
-                    page_number++;
+                    ( *page_number )++;
                     y = 630;
 
                     /* create the header and footer for the next page */
@@ -526,7 +526,6 @@ void pdf_add_text_status_of_erasure( float text_xoff,
             pdf_add_ellipse(
                 pdf, NULL, ellipse_xoff, ellipse_yoff, ellipse_xradius, ellipse_yradius, 2, PDF_RED, PDF_BLACK );
             pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff, text_yoff, angle, PDF_YELLOW );
-            pdf_add_text( pdf, NULL, "See Warning !", 12, 450, 290, PDF_RED );
 
             status_icon = STATUS_ICON_YELLOW_EXCLAMATION;  // used later on page 2 for single disk PDF
             status_icon_yellow = TRUE;  // Used later for multidisc system PDF
@@ -535,8 +534,16 @@ void pdf_add_text_status_of_erasure( float text_xoff,
         {
             if( !strcmp( c->wipe_status_txt, "FAILED" ) )
             {
-                // text shifted left slightly in ellipse due to extra character
-                pdf_add_text_rotate( pdf, NULL, c->wipe_status_txt, 12, text_xoff + 5, text_yoff, angle, PDF_RED );
+                /* Re:angle == 0 ? text_xoff + 5 : text_xoff. Required as the text needs to be
+                 * shifted left slightly in ellipse due to extra character for 0 degree angle ellipse only */
+                pdf_add_text_rotate( pdf,
+                                     NULL,
+                                     c->wipe_status_txt,
+                                     12,
+                                     angle == 0 ? text_xoff + 5 : text_xoff,
+                                     text_yoff,
+                                     angle,
+                                     PDF_RED );
 
                 status_icon = STATUS_ICON_RED_CROSS;  // used later on page 2 for single disk PDF
                 status_icon_red = TRUE;  // Used later for multidisc system PDF

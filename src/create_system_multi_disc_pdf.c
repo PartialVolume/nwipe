@@ -418,7 +418,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
         pdf_add_text_hpa_status( TEXT_SIZE_DATA, 150, yoffset, c[i] );
 
         /************************
-         * Populate HPA, DCO size
+         * HPA, DCO size
          */
         pdf_add_text( pdf, NULL, "HPA/DCO Size:", TEXT_SIZE_DATA, 300, yoffset, PDF_GRAY );
         pdf_add_text_hpa_size( TEXT_SIZE_DATA, 390, yoffset, c[i] );
@@ -435,6 +435,15 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
          */
         pdf_add_text_status_of_erasure(
             LEFT_MARGIN_TEXT - 12, yoffset + 20, LEFT_MARGIN_TEXT - 15, yoffset + 40, 10, 35, 1.5707, c[i] );
+
+        /* ****************
+         * Display warning if hidden sectors found or if HPA/DCO status cannot be determined
+         */
+        if( !strcmp( c[i]->wipe_status_txt, "ERASED" )
+            && ( c[i]->HPA_status == HPA_ENABLED || c[i]->HPA_status == HPA_UNKNOWN ) )
+        {
+            pdf_add_text( pdf, NULL, "See Warning !", TEXT_SIZE_DATA, 300, yoffset, PDF_RED );
+        }
 
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
@@ -472,7 +481,15 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
               nwipe_options.PDFreportpath,
               end_time_text );
 
+    /***********************
+     * Write the PDF to disk
+     */
     pdf_save( pdf, PDF_filename );
+
+    /**********************
+     * Clean up
+     */
     pdf_destroy( pdf );
+    free( pdf_page_array );
     return 0;
 }
