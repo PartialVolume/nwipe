@@ -240,6 +240,10 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title, size_t pdf_ty
 
     const char* user_defined_tag;
 
+    char disk_erasure_report[] = "Disk Erasure Report";
+    char system_erasure_report[] = "System Erasure Report";
+    char* erasure_report_title;
+
     /* variables used by libconfig for extracting data from nwipe.conf */
     config_setting_t* setting;
     extern config_t nwipe_cfg;
@@ -253,8 +257,9 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title, size_t pdf_ty
 
     if( nwipe_options.PDFtag || nwipe_options.PDF_toggle_host_info )
     {
-        // Always display disk info on single disc pdf or if a multi disc PDF,
-        // only display on the smart data pages and not on erasure pages.
+        /* Always display disk info on single disc pdf or if a multi disc PDF,
+         * only display on the smart data pages and not on erasure pages.
+         */
         if( pdf_type == PDF_TYPE_SINGLE_DISC
             || ( pdf_type == PDF_TYPE_MULTI_DISC && pdf_page_type == PDF_PAGE_SMART_DATA ) )
         {
@@ -298,15 +303,38 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title, size_t pdf_ty
     }
     else
     {
-        snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
-        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 696, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
-        snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
-        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 681, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        /* Always display disk info on single disc pdf or if a multi disc PDF,
+         * only display on the smart data pages and not on erasure pages.
+         */
+        if( pdf_type == PDF_TYPE_SINGLE_DISC
+            || ( pdf_type == PDF_TYPE_MULTI_DISC && pdf_page_type == PDF_PAGE_SMART_DATA ) )
+        {
+            snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
+            pdf_add_text_wrap(
+                pdf, NULL, model_header, 11, 0, 696, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+            snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
+            pdf_add_text_wrap(
+                pdf, NULL, serial_header, 11, 0, 681, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        }
     }
     pdf_set_font( pdf, "Helvetica" );
 
+    switch( pdf_type )
+    {
+        case PDF_TYPE_SINGLE_DISC:
+            erasure_report_title = disk_erasure_report;
+            break;
+
+        case PDF_TYPE_MULTI_DISC:
+            erasure_report_title = system_erasure_report;
+            break;
+
+        default:
+            erasure_report_title = "Sanity: Unknown PDF type";
+    }
+
     pdf_add_text_wrap(
-        pdf, NULL, "Disk Erasure Report", 24, 0, 765, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        pdf, NULL, erasure_report_title, 24, 0, 765, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     snprintf( barcode, sizeof( barcode ), "%s:%s", c->device_model, c->device_serial_no );
     pdf_add_text_wrap( pdf, NULL, page_title, 14, 0, 745, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
     pdf_add_barcode( pdf, NULL, PDF_BARCODE_128A, 100, 790, 400, 25, barcode, PDF_BLACK );
