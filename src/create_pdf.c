@@ -148,7 +148,7 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
 
             /* Create the header and footer for page 2, the start of the smart data */
             snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
-            create_header_and_footer( c, page_title );
+            pdf_header_footer_text( c, page_title, pdf_type, PDF_PAGE_SMART_DATA );
 
             /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
             if( pdf_type == PDF_TYPE_SINGLE_DISC )
@@ -210,14 +210,15 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
                     page = pdf_append_page_and_update_index( pdf, *page_number );
                     if( page == NULL )
                     {
-                        nwipe_log( NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", *page_number );
+                        nwipe_log(
+                            NWIPE_LOG_INFO, "Failed to allocate memory when adding new page = %zu", *page_number );
                         return -1;
                     }
                     y = 630;
 
                     /* create the header and footer for the next page */
                     snprintf( page_title, sizeof( page_title ), "Page %zu - Smart Data", *page_number );
-                    create_header_and_footer( c, page_title );
+                    pdf_header_footer_text( c, page_title, pdf_type, PDF_PAGE_SMART_DATA );
                     /* Display the appropriate status icon (green tick, red cross, tick with exclamation) */
                     pdf_display_status_icon( PDF_TYPE_SINGLE_DISC, NULL );
                 }
@@ -232,16 +233,7 @@ int nwipe_get_smart_data( size_t pdf_type, size_t* page_number, nwipe_context_t*
     return set_return_value;
 }
 
-void create_header_and_footer( nwipe_context_t* c, char* page_title )
-{
-    /**************************************************************************
-     * Create header and footer on most recently added page, with the exception
-     * of the green tick/red icon which is set from the 'status' section below.
-     */
-    pdf_header_footer_text( c, page_title );
-}
-
-void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
+void pdf_header_footer_text( nwipe_context_t* c, char* page_title, size_t pdf_type, size_t pdf_page_type )
 {
     extern char dmidecode_system_serial_number[DMIDECODE_RESULT_LENGTH];
     extern char dmidecode_system_uuid[DMIDECODE_RESULT_LENGTH];
@@ -261,13 +253,21 @@ void pdf_header_footer_text( nwipe_context_t* c, char* page_title )
 
     if( nwipe_options.PDFtag || nwipe_options.PDF_toggle_host_info )
     {
-        snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
-        pdf_add_text_wrap( pdf, NULL, model_header, 11, 0, 718, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
-        snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
-        pdf_add_text_wrap( pdf, NULL, serial_header, 11, 0, 703, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        // Always display disk info on single disc pdf or if a multi disc PDF,
+        // only display on the smart data pages and not on erasure pages.
+        if( pdf_type == PDF_TYPE_SINGLE_DISC
+            || ( pdf_type == PDF_TYPE_MULTI_DISC && pdf_page_type == PDF_PAGE_SMART_DATA ) )
+        {
+            snprintf( model_header, sizeof( model_header ), " %s: %s ", "Disk Model", c->device_model );
+            pdf_add_text_wrap(
+                pdf, NULL, model_header, 11, 0, 718, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+            snprintf( serial_header, sizeof( serial_header ), " %s: %s ", "Disk S/N", c->device_serial_no );
+            pdf_add_text_wrap(
+                pdf, NULL, serial_header, 11, 0, 703, 0, PDF_BLACK, page_width, PDF_ALIGN_CENTER, &height );
+        }
 
-        /* Display host UUID & S/N is host visibility is enabled in PDF */
-        if( nwipe_options.PDF_toggle_host_info )
+        /* Display host UUID & S/N is host visibility is enabled in PDF or always if system multi-disc PDF */
+        if( nwipe_options.PDF_toggle_host_info || pdf_type == PDF_TYPE_MULTI_DISC )
         {
             snprintf(
                 hostid_header, sizeof( hostid_header ), " %s: %s ", "System S/N", dmidecode_system_serial_number );

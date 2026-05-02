@@ -34,6 +34,9 @@
 #define PDF_TYPE_SINGLE_DISC 1
 #define PDF_TYPE_MULTI_DISC 2
 
+#define PDF_PAGE_SMART_DATA 1
+#define PDF_PAGE_ERASURE_DATA 2
+
 #define LEFT_MARGIN_TEXT 60
 
 /* Additional colors that supplement the standard colors in pdfgen.h
@@ -56,9 +59,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr );
 
 int nwipe_get_smart_data( size_t, size_t*, nwipe_context_t* );
 
-void create_header_and_footer( nwipe_context_t*, char* );
-
-void pdf_header_footer_text( nwipe_context_t*, char* );
+void pdf_header_footer_text( nwipe_context_t*, char*, size_t, size_t );
 
 /**
  * Create the disk erase report for system/multiple disk

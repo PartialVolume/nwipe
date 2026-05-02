@@ -126,7 +126,7 @@ int create_single_disc_pdf( nwipe_context_t* ptr )
      * tick/red icon which is set from the 'status' section below
      */
 
-    pdf_header_footer_text( c, "Page 1 - Erasure Status" );
+    pdf_header_footer_text( c, "Page 1 - Erasure Status", PDF_TYPE_SINGLE_DISC, PDF_PAGE_ERASURE_DATA );
 
     /* ------------------------ */
     /* Organisation Information */

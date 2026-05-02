@@ -154,7 +154,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      * tick/red icon which is set from the 'status' section below
      */
 
-    pdf_header_footer_text( c[0], "Page 1 - Erasure Status" );
+    pdf_header_footer_text( c[0], "Page 1 - Erasure Status", PDF_TYPE_MULTI_DISC, PDF_PAGE_ERASURE_DATA );
 
     /* ------------------------ */
     /* Organisation Information */
@@ -279,7 +279,7 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
 
             /* Create the header and footer for page 2 */
             snprintf( page_title, sizeof( page_title ), "Page %zu - Erasure Status", page_number );
-            create_header_and_footer( c[i], page_title );
+            pdf_header_footer_text( c[i], page_title, PDF_TYPE_MULTI_DISC, PDF_PAGE_ERASURE_DATA );
         }
         if( c[i]->device_serial_no[0] == 0 )
         {
@@ -446,7 +446,6 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
             pdf_add_text( pdf, NULL, "See Warning !", TEXT_SIZE_DATA, 300, yoffset, PDF_RED );
         }
 
-
         yoffset = yoffset - ( line_spacing * 2 );  // insert a blank line between individual disc details
     }
 
@@ -494,10 +493,10 @@ int create_system_multi_disc_pdf( nwipe_thread_data_ptr_t* ptrx )
      */
     pdf_save( pdf, PDF_filename );
 
-    /**********************
-     * Clean up and free memory
-     */
-    cleanup:
+/**********************
+ * Clean up and free memory
+ */
+cleanup:
     pdf_destroy( pdf );
     free( pdf_page_array );
     return 0;
